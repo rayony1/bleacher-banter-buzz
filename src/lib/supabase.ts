@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
@@ -11,19 +12,44 @@ export const signUp = async (email: string, password: string, username: string, 
   console.log('Signing up with:', { email, username, schoolId });
   
   try {
-    const { data, error } = await supabase.auth.signUp({
+    // Step 1: Create the user in Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          username,
-          school_id: schoolId
-        }
-      }
     });
     
-    console.log('Signup response:', data, error);
-    return { data, error };
+    if (authError) {
+      console.error('Error during auth signup:', authError);
+      return { data: null, error: authError };
+    }
+
+    console.log('Auth signup successful:', authData);
+    
+    // Step 2: If auth was successful but we need to manually create the profile
+    if (authData.user) {
+      try {
+        // Let's manually insert the profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: authData.user.id,
+            username: username,
+            school_id: schoolId,
+          });
+        
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          // We don't want to fail the signup if profile creation fails
+          // The trigger should handle this, but this is a backup
+        } else {
+          console.log('Profile created successfully');
+        }
+      } catch (profileErr) {
+        console.error('Exception in profile creation:', profileErr);
+      }
+    }
+    
+    return { data: authData, error: null };
   } catch (err) {
     console.error('Error during signup:', err);
     return { data: null, error: err instanceof Error ? err : new Error('Unknown error during signup') };

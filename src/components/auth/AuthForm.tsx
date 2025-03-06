@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, School } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -20,6 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AuthFormType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { signIn, signUp, getSchools } from '@/lib/supabase';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Form schemas for login and register
 const loginSchema = z.object({
@@ -46,26 +48,34 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [schools, setSchools] = useState<Array<{ school_id: string; school_name: string }>>([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    // Clear error when changing tabs
+    setErrorMessage(null);
+    
     // Fetch schools for the registration form
     const fetchSchools = async () => {
-      const { data, error } = await getSchools();
-      if (error) {
-        toast({
-          title: 'Error fetching schools',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else if (data) {
-        setSchools(data);
+      try {
+        const { data, error } = await getSchools();
+        if (error) {
+          toast({
+            title: 'Error fetching schools',
+            description: error.message,
+            variant: 'destructive',
+          });
+        } else if (data) {
+          setSchools(data);
+        }
+      } catch (err) {
+        console.error('Exception fetching schools:', err);
       }
     };
 
     fetchSchools();
-  }, [toast]);
+  }, [tab, toast]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -87,60 +97,78 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
 
   const onLoginSubmit = async (data: LoginFormValues) => {
     setLoading(true);
+    setErrorMessage(null);
     
     toast({
       title: 'Signing in...',
       description: 'Please wait while we authenticate your account.',
     });
     
-    const { data: authData, error } = await signIn(data.email, data.password);
-    
-    setLoading(false);
-    
-    if (error) {
-      toast({
-        title: 'Authentication failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else if (authData?.user) {
-      toast({
-        title: 'Welcome back!',
-        description: 'You have successfully signed in.',
-      });
-      navigate('/feed');
+    try {
+      const { data: authData, error } = await signIn(data.email, data.password);
+      
+      if (error) {
+        console.error('Login error:', error);
+        setErrorMessage(error.message);
+        toast({
+          title: 'Authentication failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else if (authData?.user) {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully signed in.',
+        });
+        navigate('/feed');
+      }
+    } catch (err) {
+      console.error('Exception during login:', err);
+      setErrorMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     setLoading(true);
+    setErrorMessage(null);
     
     toast({
       title: 'Creating your account...',
       description: 'Please wait while we set up your profile.',
     });
     
-    const { data: authData, error } = await signUp(
-      data.email, 
-      data.password, 
-      data.username, 
-      data.schoolId
-    );
-    
-    setLoading(false);
-    
-    if (error) {
-      toast({
-        title: 'Registration failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Account created!',
-        description: 'Please check your email to confirm your account.',
-      });
-      navigate('/feed');
+    try {
+      const { data: authData, error } = await signUp(
+        data.email, 
+        data.password, 
+        data.username, 
+        data.schoolId
+      );
+      
+      if (error) {
+        console.error('Registration error:', error);
+        setErrorMessage(error.message);
+        toast({
+          title: 'Registration failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Account created!',
+          description: 'You can now sign in with your new account.',
+        });
+        // Switch to login tab instead of navigating
+        setTab('login');
+        loginForm.setValue('email', data.email);
+      }
+    } catch (err) {
+      console.error('Exception during registration:', err);
+      setErrorMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -151,6 +179,14 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
           <TabsTrigger value="login">Sign In</TabsTrigger>
           <TabsTrigger value="register">Register</TabsTrigger>
         </TabsList>
+        
+        {errorMessage && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
         
         <TabsContent value="login" className="animate-fade-in">
           <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
