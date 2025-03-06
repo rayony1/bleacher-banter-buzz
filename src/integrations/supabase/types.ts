@@ -9,13 +9,320 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      badges: {
+        Row: {
+          badge_id: string
+          badge_name: string
+          school_id: string | null
+          type: string
+        }
+        Insert: {
+          badge_id?: string
+          badge_name: string
+          school_id?: string | null
+          type: string
+        }
+        Update: {
+          badge_id?: string
+          badge_name?: string
+          school_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badges_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["school_id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          comment_id: string
+          content: string
+          post_id: string | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          comment_id?: string
+          content: string
+          post_id?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          comment_id?: string
+          content?: string
+          post_id?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          attendance: number | null
+          away_score: number | null
+          away_team_id: string | null
+          game_id: string
+          home_score: number | null
+          home_team_id: string | null
+          location: string | null
+          period: number | null
+          sport_type: string
+          start_time: string
+          status: string
+        }
+        Insert: {
+          attendance?: number | null
+          away_score?: number | null
+          away_team_id?: string | null
+          game_id?: string
+          home_score?: number | null
+          home_team_id?: string | null
+          location?: string | null
+          period?: number | null
+          sport_type: string
+          start_time: string
+          status: string
+        }
+        Update: {
+          attendance?: number | null
+          away_score?: number | null
+          away_team_id?: string | null
+          game_id?: string
+          home_score?: number | null
+          home_team_id?: string | null
+          location?: string | null
+          period?: number | null
+          sport_type?: string
+          start_time?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["school_id"]
+          },
+          {
+            foreignKeyName: "games_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["school_id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          comments_count: number
+          content: string
+          images: string[] | null
+          is_anonymous: boolean
+          likes_count: number
+          post_id: string
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          comments_count?: number
+          content: string
+          images?: string[] | null
+          is_anonymous?: boolean
+          likes_count?: number
+          post_id?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          comments_count?: number
+          content?: string
+          images?: string[] | null
+          is_anonymous?: boolean
+          likes_count?: number
+          post_id?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      predictions: {
+        Row: {
+          actual_winner: string | null
+          created_at: string
+          game_id: string | null
+          points: number | null
+          predicted_away_score: number | null
+          predicted_home_score: number | null
+          prediction_id: string
+          selected_team: string
+          user_id: string | null
+        }
+        Insert: {
+          actual_winner?: string | null
+          created_at?: string
+          game_id?: string | null
+          points?: number | null
+          predicted_away_score?: number | null
+          predicted_home_score?: number | null
+          prediction_id?: string
+          selected_team: string
+          user_id?: string | null
+        }
+        Update: {
+          actual_winner?: string | null
+          created_at?: string
+          game_id?: string | null
+          points?: number | null
+          predicted_away_score?: number | null
+          predicted_home_score?: number | null
+          prediction_id?: string
+          selected_team?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["game_id"]
+          },
+          {
+            foreignKeyName: "predictions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          school_id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          school_id: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          school_id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["school_id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          colors: Json | null
+          district: string
+          mascot: string | null
+          school_id: string
+          school_name: string
+          state: string
+        }
+        Insert: {
+          colors?: Json | null
+          district: string
+          mascot?: string | null
+          school_id?: string
+          school_name: string
+          state: string
+        }
+        Update: {
+          colors?: Json | null
+          district?: string
+          mascot?: string | null
+          school_id?: string
+          school_name?: string
+          state?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["badge_id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_school_id: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

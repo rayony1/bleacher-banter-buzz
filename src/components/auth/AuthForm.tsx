@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -16,8 +16,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AuthFormType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { signIn, signUp, getSchools } from '@/lib/supabase';
 
 // Form schemas for login and register
 const loginSchema = z.object({
@@ -26,10 +28,10 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  username: z.string().min(2, { message: 'Username must be at least 2 characters' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  school: z.string().min(2, { message: 'Please select your school' }),
+  schoolId: z.string({ required_error: 'Please select your school' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -42,8 +44,28 @@ interface AuthFormProps {
 const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const [tab, setTab] = useState<AuthFormType>(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
+  const [schools, setSchools] = useState<Array<{ school_id: string; school_name: string }>>([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Fetch schools for the registration form
+    const fetchSchools = async () => {
+      const { data, error } = await getSchools();
+      if (error) {
+        toast({
+          title: 'Error fetching schools',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else if (data) {
+        setSchools(data);
+      }
+    };
+
+    fetchSchools();
+  }, [toast]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -56,49 +78,70 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
+      username: '',
       email: '',
       password: '',
-      school: '',
+      schoolId: '',
     },
   });
 
-  const onLoginSubmit = (data: LoginFormValues) => {
-    // Mock login - would be replaced with actual authentication logic
-    console.log('Login data:', data);
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    setLoading(true);
     
-    // Simulate authentication delay
     toast({
       title: 'Signing in...',
       description: 'Please wait while we authenticate your account.',
     });
     
-    setTimeout(() => {
+    const { data: authData, error } = await signIn(data.email, data.password);
+    
+    setLoading(false);
+    
+    if (error) {
+      toast({
+        title: 'Authentication failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else if (authData?.user) {
       toast({
         title: 'Welcome back!',
         description: 'You have successfully signed in.',
       });
       navigate('/feed');
-    }, 1500);
+    }
   };
 
-  const onRegisterSubmit = (data: RegisterFormValues) => {
-    // Mock registration - would be replaced with actual registration logic
-    console.log('Register data:', data);
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
+    setLoading(true);
     
-    // Simulate registration delay
     toast({
       title: 'Creating your account...',
       description: 'Please wait while we set up your profile.',
     });
     
-    setTimeout(() => {
+    const { data: authData, error } = await signUp(
+      data.email, 
+      data.password, 
+      data.username, 
+      data.schoolId
+    );
+    
+    setLoading(false);
+    
+    if (error) {
+      toast({
+        title: 'Registration failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
       toast({
         title: 'Account created!',
-        description: 'Your account has been successfully created.',
+        description: 'Please check your email to confirm your account.',
       });
       navigate('/feed');
-    }, 1500);
+    }
   };
 
   return (
@@ -165,7 +208,9 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
                   )}
                 />
                 
-                <Button type="submit" className="w-full">Sign In</Button>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </Button>
               </form>
             </Form>
           </div>
@@ -182,12 +227,12 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
               <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                 <FormField
                   control={registerForm.control}
-                  name="name"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input placeholder="Your name" {...field} />
+                        <Input placeholder="Choose a username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -243,22 +288,38 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
                 
                 <FormField
                   control={registerForm.control}
-                  name="school"
+                  name="schoolId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>School</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <School className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                          <Input placeholder="Select your school" className="pl-10" {...field} />
-                        </div>
-                      </FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select your school" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {schools.map((school) => (
+                            <SelectItem 
+                              key={school.school_id} 
+                              value={school.school_id}
+                            >
+                              {school.school_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
-                <Button type="submit" className="w-full">Create Account</Button>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Creating account...' : 'Create Account'}
+                </Button>
                 
                 <p className="text-xs text-muted-foreground text-center">
                   By registering, you agree to our Terms of Service and Privacy Policy
