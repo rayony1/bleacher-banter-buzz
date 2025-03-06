@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import BottomNav from '@/components/layout/BottomNav';
 import FeedTabs from '@/components/feed/FeedTabs';
 import PostCard from '@/components/feed/PostCard';
 import CreatePostButton from '@/components/feed/CreatePostButton';
@@ -11,12 +12,14 @@ import { useFeed } from '@/hooks/useFeed';
 import { useAuth } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Feed = () => {
   const [activeTab, setActiveTab] = useState<FeedType>('school');
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isMobile } = useMobile();
   
   const { 
     posts, 
@@ -55,20 +58,22 @@ const Feed = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1 pt-24 pb-16">
-        <div className="container px-4 mx-auto">
-          <div className="max-w-2xl mx-auto">
+      <main className={`flex-1 ${isMobile ? 'pt-0 pb-20' : 'pt-24 pb-16'}`}>
+        <div className={`${isMobile ? 'px-0' : 'container px-4'} mx-auto`}>
+          <div className={`${isMobile ? 'w-full' : 'max-w-2xl mx-auto'}`}>
             {/* Feed Tabs */}
-            <FeedTabs 
-              activeTab={activeTab} 
-              onTabChange={handleTabChange}
-              schoolName={user?.school || 'Your School'}
-              districtName="Metro District"
-              stateName="California"
-            />
+            <div className={isMobile ? 'sticky top-[53px] z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-4' : ''}>
+              <FeedTabs 
+                activeTab={activeTab} 
+                onTabChange={handleTabChange}
+                schoolName={user?.school || 'Your School'}
+                districtName="Metro District"
+                stateName="California"
+              />
+            </div>
             
             {/* Posts List */}
-            <div className="space-y-6">
+            <div className={`${isMobile ? 'px-3' : ''} space-y-3 mt-2`}>
               {isLoading ? (
                 // Show skeleton loaders when loading
                 Array.from({ length: 3 }).map((_, index) => (
@@ -108,7 +113,7 @@ const Feed = () => {
         </div>
       </main>
       
-      <Footer />
+      {isMobile ? <BottomNav /> : <Footer />}
     </div>
   );
 };
