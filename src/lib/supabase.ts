@@ -86,6 +86,26 @@ export const getSchools = async () => {
   return { data, error };
 };
 
+// Function to get schools by district
+export const getSchoolsByDistrict = async (district: string) => {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('*')
+    .eq('district', district);
+  
+  return { data, error };
+};
+
+// Function to get Texas schools
+export const getTexasSchools = async () => {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('*')
+    .eq('state', 'TX');
+  
+  return { data, error };
+};
+
 // Function to get all games for the scoreboard
 export const getGames = async () => {
   const { data, error } = await supabase
@@ -188,6 +208,26 @@ export const createComment = async (comment: {
     .insert(comment)
     .select()
     .single();
+  
+  return { data, error };
+};
+
+// Function to get all badges for a school
+export const getSchoolBadges = async (schoolId: string) => {
+  const { data, error } = await supabase
+    .from('badges')
+    .select('*')
+    .eq('school_id', schoolId);
+  
+  return { data, error };
+};
+
+// Function to get specific football badges
+export const getFootballBadges = async () => {
+  const { data, error } = await supabase
+    .from('badges')
+    .select('*')
+    .eq('badge_name', 'Football Team');
   
   return { data, error };
 };

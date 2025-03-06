@@ -46,9 +46,19 @@ Deno.serve(async (req) => {
       throw checkError;
     }
 
-    // Only seed if we don't have any schools
-    if (existingSchools && existingSchools.length === 0) {
-      // Insert sample schools
+    // Check specifically for Frisco ISD schools which we've added manually
+    const { data: friscoSchools, error: friscoError } = await supabase
+      .from('schools')
+      .select('*')
+      .eq('district', 'Frisco ISD');
+    
+    if (friscoError) {
+      throw friscoError;
+    }
+
+    // Only seed if we don't have any schools or if Frisco ISD schools aren't present
+    if (!existingSchools || existingSchools.length === 0 || !friscoSchools || friscoSchools.length === 0) {
+      // Insert sample schools (this is a fallback, as we've already populated with more specific schools)
       const schools = [
         {
           school_name: 'Westview High',
@@ -187,9 +197,21 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     } else {
+      // Check how many Texas schools we have
+      const { data: texasSchools, error: texasError } = await supabase
+        .from('schools')
+        .select('*')
+        .eq('state', 'TX');
+      
+      if (texasError) {
+        throw texasError;
+      }
+
       return new Response(JSON.stringify({ 
         message: 'Data already exists, skipping seed operation',
-        schools: existingSchools?.length
+        schools: existingSchools?.length,
+        texasSchools: texasSchools?.length,
+        friscoSchools: friscoSchools?.length
       }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
