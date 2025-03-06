@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -8,9 +7,11 @@ import ProfileCard from '@/components/profile/ProfileCard';
 import PostCard from '@/components/feed/PostCard';
 import { User, Post } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
-  // Mock user data
+  const { toast } = useToast();
+  
   const user: User = {
     id: '1',
     username: 'sarah_j',
@@ -27,7 +28,6 @@ const Profile = () => {
     createdAt: new Date('2023-10-15')
   };
   
-  // Mock posts data
   const posts: Post[] = [
     {
       id: '1',
@@ -56,6 +56,22 @@ const Profile = () => {
     }
   ];
   
+  const handleLikePost = (postId: string) => {
+    toast({
+      title: "Feature coming soon",
+      description: "Liking posts from the profile page will be available soon.",
+    });
+    console.log('Like post:', postId);
+  };
+  
+  const handleUnlikePost = (postId: string) => {
+    toast({
+      title: "Feature coming soon",
+      description: "Unliking posts from the profile page will be available soon.",
+    });
+    console.log('Unlike post:', postId);
+  };
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -69,12 +85,10 @@ const Profile = () => {
             </Link>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Profile Section */}
               <div className="md:col-span-1">
                 <ProfileCard user={user} />
               </div>
               
-              {/* Content Section */}
               <div className="md:col-span-2">
                 <Tabs defaultValue="posts" className="w-full">
                   <TabsList className="w-full grid grid-cols-2 mb-6">
@@ -85,7 +99,12 @@ const Profile = () => {
                   <TabsContent value="posts" className="animate-fade-in">
                     <div className="space-y-6">
                       {posts.map((post) => (
-                        <PostCard key={post.id} post={post} />
+                        <PostCard 
+                          key={post.id} 
+                          post={post} 
+                          onLike={handleLikePost}
+                          onUnlike={handleUnlikePost}
+                        />
                       ))}
                       
                       {posts.length === 0 && (
