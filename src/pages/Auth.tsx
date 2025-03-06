@@ -12,8 +12,8 @@ const Auth = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1 pt-24 pb-16">
-        <div className="container px-4 mx-auto">
+      <main className="flex-1 pt-20 pb-16 px-4 sm:pt-24">
+        <div className="container mx-auto">
           <div className="max-w-md mx-auto">
             <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
