@@ -149,6 +149,15 @@ const Index = () => {
       </main>
       
       {!isMobile && <Footer />}
+      
+      {/* Add test login button */}
+      <div className="mt-8 text-center">
+        <Link to="/auth">
+          <Button className="bg-primary hover:bg-primary/90 text-white">
+            Test Login Flow
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 };

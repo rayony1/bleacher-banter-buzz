@@ -58,6 +58,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
     // Fetch schools for the registration form
     const fetchSchools = async () => {
       try {
+        console.log('Fetching schools...');
         const { data, error } = await getSchools();
         if (error) {
           console.error('Error fetching schools:', error);
@@ -67,7 +68,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             variant: 'destructive',
           });
         } else if (data) {
-          console.log('Schools fetched successfully:', data);
+          console.log('Schools fetched successfully:', data.length);
           setSchools(data);
         }
       } catch (err) {
@@ -100,13 +101,14 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
     setLoading(true);
     setErrorMessage(null);
     
+    console.log('Login attempt with email:', data.email);
+    
     toast({
       title: 'Signing in...',
       description: 'Please wait while we authenticate your account.',
     });
     
     try {
-      console.log('Attempting sign in with:', data.email);
       const { data: authData, error } = await signIn(data.email, data.password);
       
       if (error) {
@@ -118,7 +120,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
           variant: 'destructive',
         });
       } else if (authData?.user) {
-        console.log('Login successful, user:', authData.user);
+        console.log('Login successful, user:', authData.user.id);
         toast({
           title: 'Welcome back!',
           description: 'You have successfully signed in.',
@@ -137,18 +139,18 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
     setLoading(true);
     setErrorMessage(null);
     
+    console.log('Registration attempt with:', { 
+      email: data.email, 
+      username: data.username, 
+      schoolId: data.schoolId 
+    });
+    
     toast({
       title: "Creating your account...",
       description: "Please wait while we set up your profile.",
     });
     
     try {
-      console.log('Attempting registration with:', { 
-        email: data.email, 
-        username: data.username, 
-        schoolId: data.schoolId 
-      });
-      
       const { data: authData, error } = await signUp(
         data.email, 
         data.password, 

@@ -11,12 +11,15 @@ import { useAuth } from '@/lib/auth';
 
 const Auth = () => {
   const { isMobile } = useMobile();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   
   // Redirect if user is already logged in
   useEffect(() => {
+    console.log('Auth page loaded. User state:', { user: user?.id, isLoading });
+    
     if (user) {
+      console.log('User is logged in, redirecting to feed');
       navigate('/feed');
     }
   }, [user, navigate]);

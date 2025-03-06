@@ -64,12 +64,21 @@ export const signOut = async () => {
 
 // Function to get the current user
 export const getCurrentUser = async () => {
+  console.log('Getting current user...');
   const { data: { session } } = await supabase.auth.getSession();
+  
+  if (session?.user) {
+    console.log('Session found for user:', session.user.id);
+  } else {
+    console.log('No active session found');
+  }
+  
   return session?.user || null;
 };
 
 // Function to get a user's profile
 export const getUserProfile = async (userId: string) => {
+  console.log('Getting profile for user:', userId);
   const { data, error } = await supabase
     .from('profiles')
     .select(`
@@ -81,6 +90,14 @@ export const getUserProfile = async (userId: string) => {
     `)
     .eq('user_id', userId)
     .single();
+  
+  if (error) {
+    console.error('Error fetching user profile:', error);
+  } else if (data) {
+    console.log('Profile data retrieved successfully');
+  } else {
+    console.log('No profile found for user:', userId);
+  }
   
   return { data, error };
 };
