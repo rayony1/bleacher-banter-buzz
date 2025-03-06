@@ -314,3 +314,27 @@ export const getFootballBadges = async () => {
   
   return { data, error };
 };
+
+export const sendMagicLink = async (email: string, redirectTo?: string) => {
+  console.log('Sending magic link to:', email);
+  
+  try {
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectTo || `${window.location.origin}/auth?magic_link=true`
+      }
+    });
+    
+    if (error) {
+      console.error('Error sending magic link:', error);
+      return { data: null, error };
+    }
+    
+    console.log('Magic link sent successfully');
+    return { data, error: null };
+  } catch (err) {
+    console.error('Exception sending magic link:', err);
+    return { data: null, error: err instanceof Error ? err : new Error('Unknown error sending magic link') };
+  }
+};

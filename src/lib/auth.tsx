@@ -10,6 +10,7 @@ interface AuthContextType {
   error: Error | null;
   signOut: () => Promise<void>;
   isEmailConfirmed: boolean;
+  sendMagicLink: (email: string, redirectTo?: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
   signOut: async () => {},
   isEmailConfirmed: false,
+  sendMagicLink: async () => ({ error: null }),
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -46,6 +48,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "An error occurred during sign out.",
         variant: "destructive"
       });
+    }
+  };
+
+  // Send magic link function
+  const sendMagicLink = async (email: string, redirectTo?: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectTo || `${window.location.origin}/auth?magic_link=true`,
+        },
+      });
+      
+      if (error) throw error;
+      
+      return { error: null };
+    } catch (err) {
+      console.error('Error sending magic link:', err);
+      return { error: err instanceof Error ? err : new Error('Unknown error sending magic link') };
     }
   };
 
@@ -165,7 +186,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error, signOut, isEmailConfirmed }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      error, 
+      signOut, 
+      isEmailConfirmed,
+      sendMagicLink
+    }}>
       {children}
     </AuthContext.Provider>
   );

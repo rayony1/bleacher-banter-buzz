@@ -20,15 +20,25 @@ const Auth = () => {
   const { toast } = useToast();
   const [email, setEmail] = useState<string>('');
   
-  // Check if this is an email confirmation redirect
+  // Check if this is an email confirmation redirect or magic link login
   const isConfirmation = new URLSearchParams(location.search).get('confirmation') === 'true';
+  const isMagicLink = new URLSearchParams(location.search).get('magic_link') === 'true';
   
   // Redirect if user is already logged in
   useEffect(() => {
-    console.log('Auth page loaded. User state:', { user: user?.id, isLoading, isConfirmation });
+    console.log('Auth page loaded. User state:', { user: user?.id, isLoading, isConfirmation, isMagicLink });
     
     if (user && !isLoading) {
       console.log('User is logged in, redirecting to feed');
+      
+      // If this was a magic link login, show success message
+      if (isMagicLink) {
+        toast({
+          title: "Magic link login successful",
+          description: "You have been logged in successfully.",
+        });
+      }
+      
       navigate('/feed');
     }
     
@@ -47,7 +57,7 @@ const Auth = () => {
       // Clear the stored email
       localStorage.removeItem('pendingConfirmationEmail');
     }
-  }, [user, isLoading, navigate, isConfirmation, toast]);
+  }, [user, isLoading, navigate, isConfirmation, isMagicLink, toast]);
   
   const handleResendEmail = async () => {
     if (!email) {
@@ -112,6 +122,17 @@ const Auth = () => {
                       onChange={handleEmailChange}
                     />
                   </div>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {/* If magic link in URL but no user yet, show loading state */}
+            {isMagicLink && !user && !isLoading && (
+              <Alert className="mb-6 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                <Mail className="h-4 w-4 text-blue-600 dark:text-blue-500" />
+                <AlertTitle className="text-blue-800 dark:text-blue-400">Processing Login</AlertTitle>
+                <AlertDescription className="text-blue-700 dark:text-blue-300 mt-2">
+                  <p className="mb-2">We're processing your magic link login. Please wait a moment...</p>
                 </AlertDescription>
               </Alert>
             )}

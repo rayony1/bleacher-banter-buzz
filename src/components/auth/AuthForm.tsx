@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,11 +18,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AuthFormType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { signIn, signUp, getSchools } from '@/lib/supabase';
+import { signIn, signUp, getSchools, sendMagicLink } from '@/lib/supabase';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Mail } from 'lucide-react';
 
-// Form schemas for login and register
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
@@ -36,8 +35,13 @@ const registerSchema = z.object({
   schoolId: z.string({ required_error: 'Please select your school' }),
 });
 
+const magicLinkSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
+type MagicLinkFormValues = z.infer<typeof magicLinkSchema>;
 
 interface AuthFormProps {
   defaultTab?: AuthFormType;
@@ -50,14 +54,24 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
   const [schools, setSchools] = useState<Array<{ school_id: string; school_name: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  const location = useLocation();
+  const { sendMagicLink } = useAuth();
+  
+  const isMagicLink = new URLSearchParams(location.search).get('magic_link') === 'true';
+  
   useEffect(() => {
-    // Clear error when changing tabs
+    if (isMagicLink) {
+      toast({
+        title: "Magic link login",
+        description: "Processing your login...",
+      });
+    }
+    
     setErrorMessage(null);
     
-    // Fetch schools for the registration form
     const fetchSchools = async () => {
       try {
         console.log('Fetching schools...');
@@ -79,7 +93,7 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
     };
 
     fetchSchools();
-  }, [tab, toast]);
+  }, [tab, toast, isMagicLink]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -96,6 +110,13 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
       email: '',
       password: '',
       schoolId: '',
+    },
+  });
+
+  const magicLinkForm = useForm<MagicLinkFormValues>({
+    resolver: zodResolver(magicLinkSchema),
+    defaultValues: {
+      email: '',
     },
   });
 
@@ -175,15 +196,12 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
           description: "Please check your email for a confirmation link to complete your registration.",
         });
         
-        // Store the email for confirmation
         if (setEmailForConfirmation) {
           setEmailForConfirmation(data.email);
           
-          // Store in localStorage as well for persistence
           localStorage.setItem('pendingConfirmationEmail', data.email);
         }
         
-        // Switch to login tab instead of navigating
         setTab('login');
         loginForm.setValue('email', data.email);
       }
@@ -195,12 +213,55 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
     }
   };
 
+  const onMagicLinkSubmit = async (data: MagicLinkFormValues) => {
+    setLoading(true);
+    setErrorMessage(null);
+    
+    console.log('Magic link request for email:', data.email);
+    
+    toast({
+      title: "Sending magic link...",
+      description: "Please wait while we prepare your login link.",
+    });
+    
+    try {
+      const { error } = await sendMagicLink(data.email, `${window.location.origin}/auth?magic_link=true`);
+      
+      if (error) {
+        console.error('Magic link error:', error);
+        setErrorMessage(error.message);
+        toast({
+          title: "Failed to send magic link",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Magic link sent successfully');
+        setMagicLinkSent(true);
+        toast({
+          title: "Magic link sent!",
+          description: "Please check your email for a login link.",
+        });
+        
+        if (setEmailForConfirmation) {
+          setEmailForConfirmation(data.email);
+        }
+      }
+    } catch (err) {
+      console.error('Exception during magic link request:', err);
+      setErrorMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto">
       <Tabs value={tab} onValueChange={(value) => setTab(value as AuthFormType)} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="login">Sign In</TabsTrigger>
           <TabsTrigger value="register">Register</TabsTrigger>
+          <TabsTrigger value="magic">Magic Link</TabsTrigger>
         </TabsList>
         
         {errorMessage && (
@@ -391,6 +452,47 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
                 </p>
               </form>
             </Form>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="magic" className="animate-fade-in">
+          <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+            <h2 className="text-2xl font-bold mb-4 text-center">Passwordless Login</h2>
+            <p className="text-muted-foreground text-center mb-6">
+              Get a secure login link sent to your email
+            </p>
+            
+            {magicLinkSent ? (
+              <Alert className="mb-6 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                <Mail className="h-4 w-4 text-green-600 dark:text-green-500" />
+                <AlertTitle className="text-green-800 dark:text-green-400">Magic Link Sent</AlertTitle>
+                <AlertDescription className="text-green-700 dark:text-green-300 mt-2">
+                  <p className="mb-2">We've sent a login link to your email. Please check your inbox and click the link to sign in.</p>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Form {...magicLinkForm}>
+                <form onSubmit={magicLinkForm.handleSubmit(onMagicLinkSubmit)} className="space-y-4">
+                  <FormField
+                    control={magicLinkForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="your.email@school.edu" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Sending...' : 'Send Magic Link'}
+                  </Button>
+                </form>
+              </Form>
+            )}
           </div>
         </TabsContent>
       </Tabs>
