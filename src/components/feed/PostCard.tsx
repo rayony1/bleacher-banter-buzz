@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Share, MoreHorizontal, Send, X } from 'lucide-react';
@@ -12,18 +11,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Post } from '@/lib/types';
+import { Post, PostCardProps } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { useComments, Comment } from '@/hooks/useComments';
 import { useAuth } from '@/lib/auth';
 
-interface PostCardProps {
-  post: Post;
-  onLike: (postId: string) => void;
-  onUnlike: (postId: string) => void;
-}
-
-const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
+const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostCardProps) => {
   const [liked, setLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -37,6 +30,8 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
   } = useComments(post.id);
   
   const handleLike = () => {
+    if (disableInteractions) return;
+    
     if (liked) {
       onUnlike(post.id);
     } else {
@@ -47,6 +42,8 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
   
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
+    if (disableInteractions) return;
+    
     if (commentText.trim() !== '') {
       createComment(commentText);
       setCommentText('');
@@ -58,7 +55,6 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
   return (
     <div className="bg-white dark:bg-gray-950 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden card-hover transition-all mb-4">
       <div className="p-4">
-        {/* Author info or anonymous badge */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center">
             {post.isAnonymous ? (
@@ -111,12 +107,10 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
           </div>
         </div>
         
-        {/* Post content */}
         <div className="mb-4">
           <p className="text-foreground">{post.content}</p>
         </div>
         
-        {/* Post images if any */}
         {post.images && post.images.length > 0 && (
           <div className={`grid gap-2 mb-4 ${
             post.images.length === 1 ? 'grid-cols-1' : 
@@ -142,13 +136,13 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
           </div>
         )}
         
-        {/* Post actions */}
         <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
           <Button 
             variant="ghost" 
             size="sm" 
             className={`flex items-center space-x-1 ${liked ? 'text-red-500' : ''}`}
             onClick={handleLike}
+            disabled={disableInteractions}
           >
             <Heart className={`h-4 w-4 ${liked ? 'fill-red-500' : ''}`} />
             <span>{liked ? post.likes + 1 : post.likes}</span>
@@ -164,15 +158,18 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
             <span>{post.comments}</span>
           </Button>
           
-          <Button variant="ghost" size="sm" className="flex items-center space-x-1">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center space-x-1"
+            disabled={disableInteractions}
+          >
             <Share className="h-4 w-4" />
           </Button>
         </div>
         
-        {/* Comments section */}
         {showComments && (
           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-            {/* Comment form */}
             {user && (
               <form onSubmit={handleSubmitComment} className="flex gap-2 mb-4">
                 <Avatar className="h-8 w-8 flex-shrink-0">
@@ -187,13 +184,14 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Write a comment..."
                     className="min-h-[60px] flex-1"
+                    disabled={disableInteractions}
                   />
                   <Button 
                     type="submit" 
                     size="sm" 
                     variant="ghost" 
                     className="mb-1"
-                    disabled={isCreatingComment || commentText.trim() === ''}
+                    disabled={isCreatingComment || commentText.trim() === '' || disableInteractions}
                   >
                     <Send className="h-4 w-4" />
                   </Button>
@@ -201,7 +199,6 @@ const PostCard = ({ post, onLike, onUnlike }: PostCardProps) => {
               </form>
             )}
             
-            {/* Comments list */}
             <div className="space-y-4">
               {isLoadingComments ? (
                 <p className="text-center text-sm text-muted-foreground py-2">Loading comments...</p>
