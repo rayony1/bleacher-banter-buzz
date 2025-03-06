@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -40,9 +41,10 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 interface AuthFormProps {
   defaultTab?: AuthFormType;
+  setEmailForConfirmation?: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
+const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormProps) => {
   const [tab, setTab] = useState<AuthFormType>(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [schools, setSchools] = useState<Array<{ school_id: string; school_name: string }>>([]);
@@ -172,6 +174,15 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
           title: "Account created!",
           description: "Please check your email for a confirmation link to complete your registration.",
         });
+        
+        // Store the email for confirmation
+        if (setEmailForConfirmation) {
+          setEmailForConfirmation(data.email);
+          
+          // Store in localStorage as well for persistence
+          localStorage.setItem('pendingConfirmationEmail', data.email);
+        }
+        
         // Switch to login tab instead of navigating
         setTab('login');
         loginForm.setValue('email', data.email);

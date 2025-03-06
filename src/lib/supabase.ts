@@ -11,6 +11,26 @@ export const signUp = async (email: string, password: string, username: string, 
   console.log('Signing up with:', { email, username, schoolId });
   
   try {
+    // First check if username already exists
+    const { data: existingUsers, error: checkError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .maybeSingle();
+      
+    if (checkError) {
+      console.error('Error checking for existing username:', checkError);
+      return { data: null, error: new Error('Error checking username availability') };
+    }
+    
+    if (existingUsers) {
+      console.error('Username already exists:', username);
+      return { 
+        data: null, 
+        error: new Error('This username is already taken. Please choose a different one.') 
+      };
+    }
+    
     // Step 1: Create the user in Auth with metadata that will be used by the database trigger
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,

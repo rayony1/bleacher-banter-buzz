@@ -1,4 +1,3 @@
-
 export type User = {
   id: string;
   username: string;
@@ -20,14 +19,34 @@ export type Badge = {
 
 export type Post = {
   id: string;
+  author: {
+    id: string;
+    username: string;
+    schoolId?: string;
+    isAthlete?: boolean;
+    avatar?: string;
+  };
   content: string;
-  author: User | null; // null if anonymous
-  isAnonymous: boolean;
-  schoolName: string;
-  likes: number;
-  comments: number;
-  createdAt: Date;
+  timestamp: Date;
+  isAnonymous?: boolean;
+  likeCount: number;
+  commentCount: number;
   images?: string[];
+  liked?: boolean;
+  school?: string;
+  hashtags?: string[];
+};
+
+export type PostCardProps = {
+  post: Post;
+  onLike: (postId: string) => void;
+  onUnlike: (postId: string) => void;
+  disableInteractions?: boolean;
+};
+
+export type PredictionCardProps = {
+  game: Game;
+  disableInteractions?: boolean;
 };
 
 export type School = {
