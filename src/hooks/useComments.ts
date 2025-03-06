@@ -18,7 +18,7 @@ export type Comment = {
 };
 
 export const useComments = (postId: string) => {
-  const { user } = useAuth();
+  const { user, isEmailConfirmed } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -91,6 +91,10 @@ export const useComments = (postId: string) => {
     mutationFn: async (content: string) => {
       if (!user) throw new Error('User not authenticated');
       
+      if (!isEmailConfirmed) {
+        throw new Error('Email confirmation required to comment');
+      }
+      
       const { data, error } = await supabase
         .from('comments')
         .insert({
@@ -116,13 +120,22 @@ export const useComments = (postId: string) => {
         description: 'Your comment has been published.',
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error creating comment:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add comment. Please try again.',
-        variant: 'destructive',
-      });
+      
+      if (error.message.includes('Email confirmation required')) {
+        toast({
+          title: 'Email confirmation required',
+          description: 'Please confirm your email address to post comments.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to add comment. Please try again.',
+          variant: 'destructive',
+        });
+      }
     }
   });
 
@@ -132,5 +145,6 @@ export const useComments = (postId: string) => {
     error,
     createComment: createCommentMutation.mutate,
     isCreatingComment: createCommentMutation.isPending,
+    isEmailConfirmed
   };
 };

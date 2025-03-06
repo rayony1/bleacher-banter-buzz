@@ -13,11 +13,15 @@ import { useAuth } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useMobile } from '@/hooks/use-mobile';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Feed = () => {
   const [activeTab, setActiveTab] = useState<FeedType>('school');
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isEmailConfirmed } = useAuth();
   const { toast } = useToast();
   const { isMobile } = useMobile();
   
@@ -43,6 +47,16 @@ const Feed = () => {
       });
       return;
     }
+    
+    if (!isEmailConfirmed) {
+      toast({
+        title: 'Email confirmation required',
+        description: 'Please confirm your email address to create posts.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsCreatePostModalOpen(true);
   };
   
@@ -54,6 +68,23 @@ const Feed = () => {
     createPost({ content, isAnonymous, images });
   };
   
+  const handleLikeUnlike = (postId: string, isLiked: boolean) => {
+    if (!isEmailConfirmed) {
+      toast({
+        title: 'Email confirmation required',
+        description: 'Please confirm your email address to like posts.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (isLiked) {
+      unlikePost(postId);
+    } else {
+      likePost(postId);
+    }
+  };
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -61,6 +92,22 @@ const Feed = () => {
       <main className={`flex-1 ${isMobile ? 'pt-0 pb-20' : 'pt-24 pb-16'}`}>
         <div className={`${isMobile ? 'px-0' : 'container px-4'} mx-auto`}>
           <div className={`${isMobile ? 'w-full' : 'max-w-2xl mx-auto'}`}>
+            {/* Email Confirmation Warning */}
+            {user && !isEmailConfirmed && (
+              <div className={`${isMobile ? 'px-3 mt-3' : 'mt-0 mb-4'}`}>
+                <Alert variant="warning" className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                  <Mail className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                  <AlertTitle className="text-amber-800 dark:text-amber-400">Email not confirmed</AlertTitle>
+                  <AlertDescription className="text-amber-700 dark:text-amber-300 mt-1 text-sm">
+                    <p>You can browse content, but to post, comment, or like, please confirm your email address.</p>
+                    <Button variant="link" asChild className="p-0 h-auto text-amber-600 dark:text-amber-400 font-normal underline hover:text-amber-800 dark:hover:text-amber-300">
+                      <Link to="/auth">Go to verification page</Link>
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+          
             {/* Feed Tabs */}
             <div className={isMobile ? 'sticky top-[53px] z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-4' : ''}>
               <FeedTabs 
@@ -89,8 +136,9 @@ const Feed = () => {
                   <PostCard 
                     key={post.id} 
                     post={post} 
-                    onLike={likePost}
-                    onUnlike={unlikePost}
+                    onLike={(postId) => handleLikeUnlike(postId, false)}
+                    onUnlike={(postId) => handleLikeUnlike(postId, true)}
+                    disableInteractions={!isEmailConfirmed}
                   />
                 ))
               ) : (

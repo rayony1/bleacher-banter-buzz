@@ -9,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: Error | null;
   signOut: () => Promise<void>;
+  isEmailConfirmed: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,12 +17,14 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   error: null,
   signOut: async () => {},
+  isEmailConfirmed: false,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isEmailConfirmed, setIsEmailConfirmed] = useState<boolean>(false);
 
   // Sign out function
   const signOut = async () => {
@@ -30,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
+      setIsEmailConfirmed(false);
       toast({
         title: "Signed out",
         description: "You have been successfully signed out."
@@ -55,6 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (currentUser) {
           console.log('Current user found:', currentUser.id);
+          console.log('Email confirmed status:', currentUser.email_confirmed_at ? 'Confirmed' : 'Not confirmed');
+          
+          // Set email confirmation status
+          setIsEmailConfirmed(!!currentUser.email_confirmed_at);
+          
+          // If email is not confirmed, we still load profile but provide limited functionality
           const { data, error: profileError } = await getUserProfile(currentUser.id);
           
           if (profileError) {
@@ -100,6 +110,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session?.user) {
           setIsLoading(true);
           
+          // Set email confirmation status
+          setIsEmailConfirmed(!!session.user.email_confirmed_at);
+          console.log('Email confirmed status:', session.user.email_confirmed_at ? 'Confirmed' : 'Not confirmed');
+          
           try {
             console.log('User signed in, fetching profile...');
             const { data, error: profileError } = await getUserProfile(session.user.id);
@@ -134,6 +148,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setUser(null);
+          setIsEmailConfirmed(false);
+        } else if (event === 'USER_UPDATED') {
+          console.log('User updated, checking email confirmation status');
+          if (session?.user) {
+            setIsEmailConfirmed(!!session.user.email_confirmed_at);
+          }
         }
       }
     );
@@ -145,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, error, signOut, isEmailConfirmed }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { ArrowLeft, Trophy, Mail } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,9 @@ import LeaderboardCard from '@/components/predictions/LeaderboardCard';
 import { mockUpcomingGames, mockPastPredictions, mockLeaderboard } from '@/lib/mock-data';
 import { Game, Prediction, LeaderboardEntry } from '@/lib/types';
 import { useMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/lib/auth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 const Predictions = () => {
   const [upcomingGames] = useState<Game[]>(mockUpcomingGames);
@@ -18,6 +21,7 @@ const Predictions = () => {
   const [leaderboard] = useState<LeaderboardEntry[]>(mockLeaderboard);
   const [totalPoints] = useState<number>(150);
   const { isMobile } = useMobile();
+  const { user, isEmailConfirmed } = useAuth();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -34,6 +38,20 @@ const Predictions = () => {
             )}
             
             <h1 className="text-3xl font-bold mb-6">Predictions</h1>
+            
+            {/* Email Confirmation Warning */}
+            {user && !isEmailConfirmed && (
+              <Alert className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                <Mail className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                <AlertTitle className="text-amber-800 dark:text-amber-400">Email not confirmed</AlertTitle>
+                <AlertDescription className="text-amber-700 dark:text-amber-300 mt-1 text-sm">
+                  <p>You can browse games and leaderboards, but to make predictions, please confirm your email address.</p>
+                  <Button variant="link" asChild className="p-0 h-auto text-amber-600 dark:text-amber-400 font-normal underline hover:text-amber-800 dark:hover:text-amber-300">
+                    <Link to="/auth">Go to verification page</Link>
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             
             <Tabs defaultValue="upcoming" className="w-full mb-6">
               <TabsList className="w-full grid grid-cols-3">
@@ -62,7 +80,11 @@ const Predictions = () => {
                     </div>
                   
                     {upcomingGames.map((game) => (
-                      <PredictionCard key={game.id} game={game} />
+                      <PredictionCard 
+                        key={game.id} 
+                        game={game} 
+                        disableInteractions={!isEmailConfirmed}
+                      />
                     ))}
                   </div>
                 ) : (

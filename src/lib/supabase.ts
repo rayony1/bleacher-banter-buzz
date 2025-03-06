@@ -19,7 +19,8 @@ export const signUp = async (email: string, password: string, username: string, 
         data: {
           username: username,
           school_id: schoolId
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/auth?confirmation=true`
       }
     });
     
@@ -97,6 +98,26 @@ export const getUserProfile = async (userId: string) => {
     console.log('Profile data retrieved successfully');
   } else {
     console.log('No profile found for user:', userId);
+  }
+  
+  return { data, error };
+};
+
+// Function to resend confirmation email
+export const resendConfirmationEmail = async (email: string) => {
+  console.log('Resending confirmation email to:', email);
+  const { data, error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth?confirmation=true`
+    }
+  });
+  
+  if (error) {
+    console.error('Error resending confirmation email:', error);
+  } else {
+    console.log('Confirmation email resent successfully');
   }
   
   return { data, error };
