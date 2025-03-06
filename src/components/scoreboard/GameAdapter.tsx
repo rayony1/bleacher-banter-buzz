@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Game as DatabaseGame } from '@/lib/database.types';
 import { Game } from '@/lib/types';
 
 interface GameAdapterProps {
