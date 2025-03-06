@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useMobile } from '@/hooks/use-mobile';
 
 interface CreatePostButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 const CreatePostButton = ({ onClick }: CreatePostButtonProps) => {

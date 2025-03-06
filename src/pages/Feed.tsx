@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThumbsUp, MessageSquare, AlertTriangle } from 'lucide-react';
@@ -35,6 +36,11 @@ const Feed = () => {
     likePost,
     unlikePost,
   } = useFeed(filter);
+  
+  const handleCreatePostClick = () => {
+    console.log('Create post button clicked');
+    // This would typically open a modal or navigate to a create post page
+  };
   
   // Loading state
   if (isUserLoading || (isLoading && !posts)) {
@@ -120,7 +126,7 @@ const Feed = () => {
           <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
           
           <div className="flex justify-end mt-6">
-            <CreatePostButton />
+            <CreatePostButton onClick={handleCreatePostClick} />
           </div>
           
           <div className="mt-6 space-y-6">
@@ -140,7 +146,7 @@ const Feed = () => {
                 <p className="text-gray-500 dark:text-gray-400 mb-4">
                   Be the first to post in this feed!
                 </p>
-                <CreatePostButton />
+                <CreatePostButton onClick={handleCreatePostClick} />
               </div>
             )}
           </div>

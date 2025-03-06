@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getGames } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { Game, Prediction } from '@/lib/types';
 
 export const useGames = () => {
   const { user } = useAuth();
@@ -15,8 +16,27 @@ export const useGames = () => {
     },
   });
 
+  // Mock predictions for now - this would be replaced with real data
+  const mockPredictions: Prediction[] = [
+    {
+      gameId: "game1",
+      userId: "user1",
+      homeTeam: { id: "team1", name: "Tigers" },
+      awayTeam: { id: "team2", name: "Lions" },
+      selectedTeam: "home",
+      predictedHomeScore: 21,
+      predictedAwayScore: 14,
+      actualHomeScore: 28,
+      actualAwayScore: 14,
+      actualWinner: "home",
+      points: 10,
+      gameDate: new Date().toISOString()
+    }
+  ];
+
   return {
     games: data || [],
+    predictions: mockPredictions,
     isLoading,
     error,
     userSchoolId: user?.school ? data?.find(game => 
