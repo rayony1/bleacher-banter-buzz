@@ -10,24 +10,28 @@ import PastPredictionCard from '@/components/predictions/PastPredictionCard';
 import LeaderboardCard from '@/components/predictions/LeaderboardCard';
 import { mockUpcomingGames, mockPastPredictions, mockLeaderboard } from '@/lib/mock-data';
 import { Game, Prediction, LeaderboardEntry } from '@/lib/types';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Predictions = () => {
   const [upcomingGames] = useState<Game[]>(mockUpcomingGames);
   const [pastPredictions] = useState<Prediction[]>(mockPastPredictions);
   const [leaderboard] = useState<LeaderboardEntry[]>(mockLeaderboard);
   const [totalPoints] = useState<number>(150);
+  const { isMobile } = useMobile();
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1 pt-24 pb-16">
+      <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'}`}>
         <div className="container px-4 mx-auto">
           <div className="max-w-4xl mx-auto">
-            <Link to="/feed" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Feed
-            </Link>
+            {!isMobile && (
+              <Link to="/feed" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Feed
+              </Link>
+            )}
             
             <h1 className="text-3xl font-bold mb-6">Predictions</h1>
             
@@ -118,7 +122,7 @@ const Predictions = () => {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
     </div>
   );
 };

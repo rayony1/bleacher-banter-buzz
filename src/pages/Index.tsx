@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MessageCircle, Trophy, Flag } from 'lucide-react';
@@ -6,13 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
+  const { isMobile } = useMobile();
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1">
+      <main className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
         {/* Hero Section */}
         <section className="relative pt-24 pb-16 md:pt-32 md:pb-24">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent z-0"></div>
@@ -146,7 +148,7 @@ const Index = () => {
         </section>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
     </div>
   );
 };

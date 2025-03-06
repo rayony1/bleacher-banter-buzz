@@ -8,9 +8,11 @@ import PostCard from '@/components/feed/PostCard';
 import { User, Post } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Profile = () => {
   const { toast } = useToast();
+  const { isMobile } = useMobile();
   
   const user: User = {
     id: '1',
@@ -76,13 +78,15 @@ const Profile = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1 pt-24 pb-16">
+      <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'}`}>
         <div className="container px-4 mx-auto">
           <div className="max-w-4xl mx-auto">
-            <Link to="/feed" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Feed
-            </Link>
+            {!isMobile && (
+              <Link to="/feed" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Feed
+              </Link>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-1">
@@ -127,7 +131,7 @@ const Profile = () => {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
     </div>
   );
 };
