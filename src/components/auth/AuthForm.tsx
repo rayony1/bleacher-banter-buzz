@@ -22,6 +22,7 @@ import { signIn, signUp, getSchools, sendMagicLink } from '@/lib/supabase';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Mail } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
