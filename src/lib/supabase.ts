@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
@@ -12,10 +11,16 @@ export const signUp = async (email: string, password: string, username: string, 
   console.log('Signing up with:', { email, username, schoolId });
   
   try {
-    // Step 1: Create the user in Auth
+    // Step 1: Create the user in Auth with metadata that will be used by the database trigger
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username: username,
+          school_id: schoolId
+        }
+      }
     });
     
     if (authError) {
@@ -25,29 +30,8 @@ export const signUp = async (email: string, password: string, username: string, 
 
     console.log('Auth signup successful:', authData);
     
-    // Step 2: If auth was successful but we need to manually create the profile
-    if (authData.user) {
-      try {
-        // Let's manually insert the profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            username: username,
-            school_id: schoolId,
-          });
-        
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          // We don't want to fail the signup if profile creation fails
-          // The trigger should handle this, but this is a backup
-        } else {
-          console.log('Profile created successfully');
-        }
-      } catch (profileErr) {
-        console.error('Exception in profile creation:', profileErr);
-      }
-    }
+    // The database trigger (handle_new_user) will create the profile automatically
+    // using the metadata we passed in the signUp options
     
     return { data: authData, error: null };
   } catch (err) {

@@ -135,8 +135,8 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
     setErrorMessage(null);
     
     toast({
-      title: 'Creating your account...',
-      description: 'Please wait while we set up your profile.',
+      title: "Creating your account...",
+      description: "Please wait while we set up your profile.",
     });
     
     try {
@@ -151,14 +151,14 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
         console.error('Registration error:', error);
         setErrorMessage(error.message);
         toast({
-          title: 'Registration failed',
+          title: "Registration failed",
           description: error.message,
-          variant: 'destructive',
+          variant: "destructive",
         });
       } else {
         toast({
-          title: 'Account created!',
-          description: 'You can now sign in with your new account.',
+          title: "Account created!",
+          description: "Please check your email for a confirmation link to complete your registration.",
         });
         // Switch to login tab instead of navigating
         setTab('login');
