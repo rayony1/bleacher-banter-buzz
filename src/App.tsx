@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
+import Scoreboard from "./pages/Scoreboard";
+import Predictions from "./pages/Predictions";
 import NotFound from "./pages/NotFound";
 
 // Create a client
@@ -38,6 +40,8 @@ const App = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/scoreboard" element={<Scoreboard />} />
+            <Route path="/predictions" element={<Predictions />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
