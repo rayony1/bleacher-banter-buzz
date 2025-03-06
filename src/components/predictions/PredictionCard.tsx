@@ -10,9 +10,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface PredictionCardProps {
   game: Game;
+  disableInteractions?: boolean;
 }
 
-const PredictionCard = ({ game }: PredictionCardProps) => {
+const PredictionCard = ({ game, disableInteractions = false }: PredictionCardProps) => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [homeScore, setHomeScore] = useState<string>('');
   const [awayScore, setAwayScore] = useState<string>('');
@@ -33,7 +34,7 @@ const PredictionCard = ({ game }: PredictionCardProps) => {
   };
   
   const handleSubmit = () => {
-    if (!selectedTeam) return;
+    if (!selectedTeam || disableInteractions) return;
     
     // In a real app, this would send the prediction to an API
     console.log('Submitting prediction:', {
@@ -125,7 +126,8 @@ const PredictionCard = ({ game }: PredictionCardProps) => {
                   type="button"
                   variant={selectedTeam === game.homeTeam.id ? "default" : "outline"}
                   className="w-full"
-                  onClick={() => setSelectedTeam(game.homeTeam.id)}
+                  onClick={() => !disableInteractions && setSelectedTeam(game.homeTeam.id)}
+                  disabled={disableInteractions}
                 >
                   {game.homeTeam.name}
                 </Button>
@@ -133,7 +135,8 @@ const PredictionCard = ({ game }: PredictionCardProps) => {
                   type="button"
                   variant={selectedTeam === game.awayTeam.id ? "default" : "outline"}
                   className="w-full"
-                  onClick={() => setSelectedTeam(game.awayTeam.id)}
+                  onClick={() => !disableInteractions && setSelectedTeam(game.awayTeam.id)}
+                  disabled={disableInteractions}
                 >
                   {game.awayTeam.name}
                 </Button>
@@ -150,6 +153,7 @@ const PredictionCard = ({ game }: PredictionCardProps) => {
                     onChange={handleHomeScoreChange}
                     placeholder="0"
                     className="mt-1"
+                    disabled={disableInteractions}
                   />
                 </div>
                 <div>
@@ -162,20 +166,23 @@ const PredictionCard = ({ game }: PredictionCardProps) => {
                     onChange={handleAwayScoreChange}
                     placeholder="0"
                     className="mt-1"
+                    disabled={disableInteractions}
                   />
                 </div>
               </div>
               
               <Button
                 className="w-full"
-                disabled={!selectedTeam}
+                disabled={!selectedTeam || disableInteractions}
                 onClick={handleSubmit}
               >
                 Submit Prediction
               </Button>
               
               <p className="text-xs text-muted-foreground text-center">
-                Predictions lock at game start time
+                {disableInteractions 
+                  ? "Email confirmation required to make predictions" 
+                  : "Predictions lock at game start time"}
               </p>
             </div>
           ) : (

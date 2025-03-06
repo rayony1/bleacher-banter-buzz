@@ -22,19 +22,25 @@ export type Post = {
   author: {
     id: string;
     username: string;
+    name?: string;
     schoolId?: string;
     isAthlete?: boolean;
     avatar?: string;
+    badges?: Badge[];
   };
   content: string;
   timestamp: Date;
+  createdAt: Date;
   isAnonymous?: boolean;
   likeCount: number;
   commentCount: number;
   images?: string[];
   liked?: boolean;
   school?: string;
+  schoolName?: string;
   hashtags?: string[];
+  likes?: number;
+  comments?: number;
 };
 
 export type PostCardProps = {
@@ -69,7 +75,7 @@ export type Team = {
   season: 'fall' | 'winter' | 'spring';
 };
 
-export type FeedType = 'school' | 'district' | 'state';
+export type FeedType = 'school' | 'district' | 'state' | 'all' | 'athletes';
 
 export type AuthFormType = 'login' | 'register';
 
@@ -138,4 +144,15 @@ export type LeaderboardEntry = {
   points: number;
   correctPredictions: number;
   totalPredictions: number;
+};
+
+export type AuthFormProps = {
+  defaultTab?: AuthFormType;
+  setEmailForConfirmation?: React.Dispatch<React.SetStateAction<string>>;
+};
+
+export type LeaderboardCardProps = {
+  entry?: LeaderboardEntry;
+  rank?: number;
+  isCurrentUser?: boolean;
 };

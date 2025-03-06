@@ -14,6 +14,7 @@ import LeaderboardCard from '@/components/predictions/LeaderboardCard';
 import { useGames } from '@/hooks/useGames';
 import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
+import { Game } from '@/lib/types';
 
 const Predictions = () => {
   const { isMobile } = useMobile();
@@ -28,8 +29,8 @@ const Predictions = () => {
   }, [user, isUserLoading, navigate]);
   
   const {
-    upcomingGames,
-    pastPredictions,
+    games: upcomingGames,
+    predictions: pastPredictions,
     isLoading,
     error,
   } = useGames();
@@ -92,7 +93,7 @@ const Predictions = () => {
             {upcomingGames && upcomingGames.length > 0 ? (
               <ScrollArea className="w-full whitespace-nowrap pb-4">
                 <div className="flex space-x-4">
-                  {upcomingGames.map((game) => (
+                  {upcomingGames.map((game: Game) => (
                     <PredictionCard 
                       key={game.id} 
                       game={game} 
@@ -125,7 +126,14 @@ const Predictions = () => {
           
           <section className="mt-10">
             <h2 className="text-xl font-semibold mb-4">School Leaderboard</h2>
-            <LeaderboardCard />
+            <LeaderboardCard isCurrentUser={false} rank={0} entry={{
+              userId: "",
+              username: "",
+              school: "",
+              points: 0,
+              correctPredictions: 0,
+              totalPredictions: 0
+            }} />
           </section>
         </div>
       </main>

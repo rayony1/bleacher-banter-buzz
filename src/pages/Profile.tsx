@@ -34,27 +34,45 @@ const Profile = () => {
     {
       id: '1',
       content: "Our basketball team is looking incredible in practice today! Can't wait for the game on Friday!",
-      author: user,
+      author: {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        avatar: user.avatar,
+        badges: user.badges
+      },
       isAnonymous: false,
-      schoolName: 'Eastside High',
-      likes: 24,
-      comments: 5,
+      school: 'Eastside High',
+      likeCount: 24,
+      commentCount: 5,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-      images: ['https://source.unsplash.com/random/600x400?basketball']
+      images: ['https://source.unsplash.com/random/600x400?basketball'],
+      likes: 24,
+      comments: 5
     },
     {
       id: '3',
       content: "Congrats to our volleyball team for winning the district championship! What an amazing season! #GoEastside",
-      author: user,
+      author: {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        avatar: user.avatar,
+        badges: user.badges
+      },
       isAnonymous: false,
-      schoolName: 'Eastside High',
-      likes: 86,
-      comments: 14,
+      school: 'Eastside High',
+      likeCount: 86,
+      commentCount: 14,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
       images: [
         'https://source.unsplash.com/random/600x400?volleyball=1',
         'https://source.unsplash.com/random/600x400?volleyball=2'
-      ]
+      ],
+      likes: 86,
+      comments: 14
     }
   ];
   

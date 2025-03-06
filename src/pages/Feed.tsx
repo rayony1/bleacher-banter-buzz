@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThumbsUp, MessageSquare, AlertTriangle } from 'lucide-react';
@@ -13,14 +12,14 @@ import CreatePostButton from '@/components/feed/CreatePostButton';
 import { useFeed } from '@/hooks/useFeed';
 import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
-import { Post } from '@/lib/types';
+import { Post, FeedType } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Feed = () => {
   const { isMobile } = useMobile();
   const navigate = useNavigate();
   const { user, isLoading: isUserLoading, isEmailConfirmed } = useAuth();
-  const [filter, setFilter] = useState<'all' | 'school' | 'district' | 'athletes'>('school');
+  const [filter, setFilter] = useState<FeedType>('school');
   
   // Redirect if not logged in
   useEffect(() => {
@@ -44,7 +43,7 @@ const Feed = () => {
         <Header />
         <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'} px-4`}>
           <div className="container mx-auto max-w-4xl">
-            <FeedTabs activeTab={filter} onTabChange={setFilter} />
+            <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
             <div className="mt-6 space-y-6">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="bg-white dark:bg-gray-950 rounded-lg shadow p-5 space-y-4">
@@ -118,7 +117,7 @@ const Feed = () => {
             </Alert>
           )}
           
-          <FeedTabs activeTab={filter} onTabChange={setFilter} />
+          <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
           
           <div className="flex justify-end mt-6">
             <CreatePostButton />
