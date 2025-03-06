@@ -1,15 +1,25 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthForm from '@/components/auth/AuthForm';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/lib/auth';
 
 const Auth = () => {
   const { isMobile } = useMobile();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/feed');
+    }
+  }, [user, navigate]);
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -22,36 +22,48 @@ export const useFeed = (feedType: FeedType) => {
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
       
-      const { data, error } = await supabase
-        .rpc('get_feed_posts', {
-          feed_type: feedType,
-          user_uuid: user.id
-        });
+      console.log('Fetching posts for feed type:', feedType, 'user:', user.id);
+      
+      try {
+        const { data, error } = await supabase
+          .rpc('get_feed_posts', {
+            feed_type: feedType,
+            user_uuid: user.id
+          });
 
-      if (error) throw error;
+        if (error) {
+          console.error('Error fetching posts:', error);
+          throw error;
+        }
 
-      // Transform the data to match our Post type
-      return data.map((post: any) => ({
-        id: post.post_id,
-        content: post.content,
-        author: post.is_anonymous ? null : {
-          id: post.user_id,
-          username: post.username,
-          name: post.username,
-          avatar: `https://source.unsplash.com/random/100x100?portrait=${post.user_id}`,
-          school: post.school_name,
-          badges: [],  // We'll need to fetch badges separately if needed
-          points: 0,   // We'd need to calculate this
-          isAthlete: false, // We'd need additional data for this
-          createdAt: new Date(post.post_timestamp)
-        },
-        isAnonymous: post.is_anonymous,
-        schoolName: post.school_name,
-        likes: post.likes_count,
-        comments: post.comments_count,
-        createdAt: new Date(post.post_timestamp),
-        images: post.images || []
-      })) as Post[];
+        console.log('Fetched posts:', data);
+        
+        // Transform the data to match our Post type
+        return data.map((post: any) => ({
+          id: post.post_id,
+          content: post.content,
+          author: post.is_anonymous ? null : {
+            id: post.user_id,
+            username: post.username,
+            name: post.username,
+            avatar: `https://source.unsplash.com/random/100x100?portrait=${post.user_id}`,
+            school: post.school_name,
+            badges: [],  // We'll need to fetch badges separately if needed
+            points: 0,   // We'd need to calculate this
+            isAthlete: false, // We'd need additional data for this
+            createdAt: new Date(post.post_timestamp)
+          },
+          isAnonymous: post.is_anonymous,
+          schoolName: post.school_name,
+          likes: post.likes_count,
+          comments: post.comments_count,
+          createdAt: new Date(post.post_timestamp),
+          images: post.images || []
+        })) as Post[];
+      } catch (err) {
+        console.error('Error in feed query function:', err);
+        throw err;
+      }
     },
     enabled: !!user,
   });

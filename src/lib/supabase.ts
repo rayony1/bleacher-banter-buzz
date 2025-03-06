@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
@@ -9,27 +8,43 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // Authentication helper functions
 export const signUp = async (email: string, password: string, username: string, schoolId: string) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        username,
-        school_id: schoolId
-      }
-    }
-  });
+  console.log('Signing up with:', { email, username, schoolId });
   
-  return { data, error };
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          school_id: schoolId
+        }
+      }
+    });
+    
+    console.log('Signup response:', data, error);
+    return { data, error };
+  } catch (err) {
+    console.error('Error during signup:', err);
+    return { data: null, error: err instanceof Error ? err : new Error('Unknown error during signup') };
+  }
 };
 
 export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+  console.log('Signing in with:', email);
   
-  return { data, error };
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    console.log('Signin response:', data, error);
+    return { data, error };
+  } catch (err) {
+    console.error('Error during signin:', err);
+    return { data: null, error: err instanceof Error ? err : new Error('Unknown error during signin') };
+  }
 };
 
 export const signOut = async () => {
