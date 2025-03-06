@@ -123,6 +123,7 @@ export type Game = {
 export type TeamPrediction = 'home' | 'away';
 
 export type Prediction = {
+  id?: string; // Add optional id property
   gameId: string;
   userId: string;
   homeTeam: GameTeam;

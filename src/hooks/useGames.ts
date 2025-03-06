@@ -19,6 +19,7 @@ export const useGames = () => {
   // Mock predictions for now - this would be replaced with real data
   const mockPredictions: Prediction[] = [
     {
+      id: "prediction1", // Add id property to fix the error
       gameId: "game1",
       userId: "user1",
       homeTeam: { id: "team1", name: "Tigers" },
