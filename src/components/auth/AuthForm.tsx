@@ -61,12 +61,14 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
       try {
         const { data, error } = await getSchools();
         if (error) {
+          console.error('Error fetching schools:', error);
           toast({
             title: 'Error fetching schools',
             description: error.message,
             variant: 'destructive',
           });
         } else if (data) {
+          console.log('Schools fetched successfully:', data);
           setSchools(data);
         }
       } catch (err) {
@@ -105,6 +107,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
     });
     
     try {
+      console.log('Attempting sign in with:', data.email);
       const { data: authData, error } = await signIn(data.email, data.password);
       
       if (error) {
@@ -116,6 +119,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
           variant: 'destructive',
         });
       } else if (authData?.user) {
+        console.log('Login successful, user:', authData.user);
         toast({
           title: 'Welcome back!',
           description: 'You have successfully signed in.',
@@ -140,6 +144,12 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
     });
     
     try {
+      console.log('Attempting registration with:', { 
+        email: data.email, 
+        username: data.username, 
+        schoolId: data.schoolId 
+      });
+      
       const { data: authData, error } = await signUp(
         data.email, 
         data.password, 
@@ -156,6 +166,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
           variant: "destructive",
         });
       } else {
+        console.log('Registration successful:', authData);
         toast({
           title: "Account created!",
           description: "Please check your email for a confirmation link to complete your registration.",
@@ -338,14 +349,20 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {schools.map((school) => (
-                            <SelectItem 
-                              key={school.school_id} 
-                              value={school.school_id}
-                            >
-                              {school.school_name}
+                          {schools.length > 0 ? (
+                            schools.map((school) => (
+                              <SelectItem 
+                                key={school.school_id} 
+                                value={school.school_id}
+                              >
+                                {school.school_name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="loading" disabled>
+                              Loading schools...
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
