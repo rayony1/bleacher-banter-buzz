@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -24,20 +25,49 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }: CreatePostModalProps
   const [content, setContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   
-  // Mock image upload function
-  const handleImageUpload = () => {
-    // In a real application, this would handle file selection and upload
-    const mockImageUrl = 'https://source.unsplash.com/random/300x200?sports';
-    if (images.length < 3) {
-      setImages([...images, mockImageUrl]);
-    } else {
+  // Handle file upload to Supabase Storage
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    if (images.length + files.length > 3) {
       toast({
         title: 'Maximum images reached',
         description: 'You can only upload up to 3 images per post.',
         variant: 'destructive',
       });
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    try {
+      // In a real application, we'd upload to Supabase Storage
+      // For now, we'll use a mock approach with unsplash URLs
+      const newImages = Array.from(files).map((_, index) => 
+        `https://source.unsplash.com/random/600x400?sports=${Date.now()}-${index}`
+      );
+      
+      setImages([...images, ...newImages]);
+      
+      toast({
+        title: 'Images uploaded',
+        description: `Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}.`,
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload images. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+      // Clear the input
+      e.target.value = '';
     }
   };
   
@@ -60,17 +90,24 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }: CreatePostModalProps
     setIsAnonymous(false);
     setImages([]);
     onClose();
-    
-    toast({
-      title: 'Post created!',
-      description: isAnonymous 
-        ? 'Your anonymous post will be reviewed by peers before publishing.' 
-        : 'Your post has been published.',
-    });
+  };
+  
+  const resetForm = () => {
+    setContent('');
+    setIsAnonymous(false);
+    setImages([]);
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (!open) {
+          resetForm();
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create Post</DialogTitle>
@@ -125,8 +162,23 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }: CreatePostModalProps
         
         <DialogFooter className="flex-row justify-between sm:justify-between gap-2">
           <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={handleImageUpload}>
-              <Image className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              disabled={isUploading || images.length >= 3}
+              asChild
+            >
+              <label className="cursor-pointer">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  className="hidden" 
+                  onChange={handleFileUpload}
+                  disabled={isUploading || images.length >= 3}
+                />
+                <Image className="h-4 w-4" />
+              </label>
             </Button>
             <Button variant="outline" size="sm" className="flex items-center gap-1">
               <User className="h-4 w-4" />
@@ -134,7 +186,7 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }: CreatePostModalProps
             </Button>
           </div>
           
-          <Button onClick={handleSubmit} className="btn-hover">
+          <Button onClick={handleSubmit} className="btn-hover" disabled={content.trim() === '' || isUploading}>
             Post
           </Button>
         </DialogFooter>

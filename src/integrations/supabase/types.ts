@@ -134,6 +134,39 @@ export type Database = {
           },
         ]
       }
+      post_likes: {
+        Row: {
+          created_at: string | null
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           comments_count: number
@@ -317,6 +350,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_feed_posts: {
+        Args: {
+          feed_type: string
+          user_uuid: string
+        }
+        Returns: {
+          post_id: string
+          user_id: string
+          content: string
+          is_anonymous: boolean
+          post_timestamp: string
+          likes_count: number
+          comments_count: number
+          images: string[]
+          username: string
+          school_id: string
+          school_name: string
+          district: string
+          state: string
+        }[]
+      }
       get_user_school_id: {
         Args: {
           user_uuid: string
