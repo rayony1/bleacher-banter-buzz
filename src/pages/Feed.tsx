@@ -59,7 +59,7 @@ const Feed = () => {
               <div className="h-8 w-8"></div>
             )}
             
-            <div className="text-xl font-bold">X</div>
+            <div className="text-xl font-bold">Bleacher Banter</div>
             
             <Button variant="ghost" size="icon" className="rounded-full">
               <Settings className="h-5 w-5" />
@@ -119,7 +119,7 @@ const Feed = () => {
               <div className="h-8 w-8"></div>
             )}
             
-            <div className="text-xl font-bold">X</div>
+            <div className="text-xl font-bold">Bleacher Banter</div>
             
             <Button variant="ghost" size="icon" className="rounded-full">
               <Settings className="h-5 w-5" />
@@ -160,7 +160,7 @@ const Feed = () => {
             <div className="h-8 w-8"></div>
           )}
           
-          <div className="text-xl font-bold">X</div>
+          <div className="text-xl font-bold">Bleacher Banter</div>
           
           <Button variant="ghost" size="icon" className="rounded-full">
             <Settings className="h-5 w-5" />

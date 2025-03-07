@@ -25,19 +25,19 @@ const FeedTabs = ({
           value="school" 
           className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
         >
-          For You
+          My School
         </TabsTrigger>
         <TabsTrigger 
           value="district" 
           className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
         >
-          Following
+          District
         </TabsTrigger>
         <TabsTrigger 
           value="state" 
           className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
         >
-          Trending
+          State
         </TabsTrigger>
       </TabsList>
       
