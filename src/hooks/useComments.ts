@@ -1,150 +1,147 @@
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
-import { useToast } from '@/hooks/use-toast';
 
 export type Comment = {
   id: string;
-  postId: string;
   content: string;
+  post_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
   author: {
-    id: string;
     username: string;
-    avatar?: string;
-  } | null;
-  createdAt: Date;
+    avatar_url?: string;
+  };
 };
 
 export const useComments = (postId: string) => {
-  const { user, isEmailConfirmed } = useAuth();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const { user } = useAuth();
 
-  // Query to fetch comments for a post
-  const { 
-    data: comments,
-    isLoading,
-    error,
-    refetch 
-  } = useQuery({
-    queryKey: ['comments', postId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          comment_id,
-          post_id,
-          content,
-          timestamp,
-          user_id,
-          profiles:user_id (username)
-        `)
-        .eq('post_id', postId)
-        .order('timestamp', { ascending: true });
-
-      if (error) throw error;
-
-      // Transform the data to match our Comment type
-      return data.map((comment: any) => ({
-        id: comment.comment_id,
-        postId: comment.post_id,
-        content: comment.content,
-        author: {
-          id: comment.user_id,
-          username: comment.profiles?.username || 'Unknown User',
-          avatar: `https://source.unsplash.com/random/100x100?portrait=${comment.user_id}`
-        },
-        createdAt: new Date(comment.timestamp)
-      })) as Comment[];
-    },
-    enabled: !!postId,
-  });
-
-  // Set up real-time subscription
-  useEffect(() => {
-    if (!postId) return;
+  // Mock function to fetch comments
+  const fetchComments = async () => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    const channel = supabase
-      .channel('public:comments')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'comments',
-          filter: `post_id=eq.${postId}`
-        }, 
-        () => {
-          // When comments change, refetch the data
-          refetch();
-        })
-      .subscribe();
+    // Return mock data
+    return {
+      data: [
+        {
+          id: '1',
+          content: 'Great post! Looking forward to the game.',
+          post_id: postId,
+          user_id: 'user123',
+          created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+          updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+          author: {
+            username: 'SportsFan',
+            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=10'
+          }
+        },
+        {
+          id: '2',
+          content: 'I\'ll be there to cheer!',
+          post_id: postId,
+          user_id: 'user456',
+          created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+          updated_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+          author: {
+            username: 'TeamSupporter',
+            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=11'
+          }
+        }
+      ],
+      error: null
+    };
+  };
+
+  // Load comments
+  useEffect(() => {
+    const loadComments = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await fetchComments();
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        setComments(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load comments'));
+        console.error('Error loading comments:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadComments();
+    
+    // In a real app, we would set up real-time subscription
+    // This would be replaced with actual Supabase subscription
     
     return () => {
-      supabase.removeChannel(channel);
+      // Cleanup function for real subscriptions would go here
     };
-  }, [postId, refetch]);
+  }, [postId]);
 
-  // Mutation to create a new comment
-  const createCommentMutation = useMutation({
-    mutationFn: async (content: string) => {
-      if (!user) throw new Error('User not authenticated');
+  // Add comment
+  const addComment = async (content: string) => {
+    if (!user) {
+      toast({
+        title: "Not authorized",
+        description: "You must be logged in to comment",
+        variant: "destructive"
+      });
+      return { error: new Error('Not authorized') };
+    }
+    
+    try {
+      // Mock new comment
+      const newComment: Comment = {
+        id: `comment-${Date.now()}`,
+        content,
+        post_id: postId,
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        author: {
+          username: user.username,
+          avatar_url: user.avatar
+        }
+      };
       
-      if (!isEmailConfirmed) {
-        throw new Error('Email confirmation required to comment');
-      }
-      
-      const { data, error } = await supabase
-        .from('comments')
-        .insert({
-          post_id: postId,
-          user_id: user.id,
-          content
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      // Invalidate the comments query to trigger a refetch
-      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
-      
-      // Also invalidate the posts query to update the comment count
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      // Add to local state
+      setComments(prev => [newComment, ...prev]);
       
       toast({
-        title: 'Comment added!',
-        description: 'Your comment has been published.',
+        title: "Comment added",
+        description: "Your comment has been posted"
       });
-    },
-    onError: (error: Error) => {
-      console.error('Error creating comment:', error);
       
-      if (error.message.includes('Email confirmation required')) {
-        toast({
-          title: 'Email confirmation required',
-          description: 'Please confirm your email address to post comments.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to add comment. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      return { data: newComment, error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to add comment');
+      console.error('Error adding comment:', error);
+      
+      toast({
+        title: "Error",
+        description: "Failed to add your comment",
+        variant: "destructive"
+      });
+      
+      return { error };
     }
-  });
+  };
 
   return {
     comments,
     isLoading,
     error,
-    createComment: createCommentMutation.mutate,
-    isCreatingComment: createCommentMutation.isPending,
-    isEmailConfirmed
+    addComment
   };
 };

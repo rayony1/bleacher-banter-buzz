@@ -1,10 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Post, FeedType } from '@/lib/types';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
+import { Post, FeedType } from '@/lib/types';
 
 // Sample posts for demo
 const SAMPLE_POSTS: Record<FeedType, Post[]> = {
@@ -17,17 +15,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'CoachJohnson',
         name: 'Coach Johnson',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=1',
-        school: 'Westview High',
         badges: [{ badge_name: 'Coach', type: 'staff' }],
-        points: 540,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
       },
       isAnonymous: false,
       schoolName: 'Westview High',
       likes: 24,
       comments: 8,
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      likeCount: 24,
+      commentCount: 8,
       images: []
     },
     {
@@ -38,17 +35,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'TrackStar22',
         name: 'Jamie Rodriguez',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=2',
-        school: 'Westview High',
         badges: [{ badge_name: 'Athlete', type: 'athlete' }],
-        points: 320,
-        isAthlete: true,
-        createdAt: new Date(Date.now() - 300 * 24 * 60 * 60 * 1000)
       },
       isAnonymous: false,
       schoolName: 'Westview High',
       likes: 42,
       comments: 12,
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      likeCount: 42,
+      commentCount: 12,
       images: ['https://source.unsplash.com/random/800x600?track']
     },
     {
@@ -59,7 +55,10 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
       schoolName: 'Westview High',
       likes: 3,
       comments: 5,
+      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+      likeCount: 3,
+      commentCount: 5,
       images: []
     },
     {
@@ -70,17 +69,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'BleacherFan',
         name: 'Demo User',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=3',
-        school: 'Westview High',
         badges: [{ badge_name: 'Student', type: 'student' }],
-        points: 250,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000)
       },
       isAnonymous: false,
       schoolName: 'Westview High',
       likes: 18,
       comments: 2,
+      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
+      likeCount: 18,
+      commentCount: 2,
       images: ['https://source.unsplash.com/random/800x600?gym']
     }
   ],
@@ -93,17 +91,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'DistrictAdmin',
         name: 'District Office',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=4',
-        school: 'District Office',
         badges: [{ badge_name: 'Admin', type: 'admin' }],
-        points: 0,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 500 * 24 * 60 * 60 * 1000)
       },
       isAnonymous: false,
       schoolName: 'District Office',
       likes: 32,
       comments: 7,
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      likeCount: 32,
+      commentCount: 7,
       images: []
     },
     {
@@ -114,17 +111,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'SportsFan',
         name: 'Taylor Johnson',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=5',
-        school: 'Del Norte High',
         badges: [{ badge_name: 'Student', type: 'student' }],
-        points: 180,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 450 * 24 * 60 * 60 * 1000)
       },
       isAnonymous: false,
       schoolName: 'Del Norte High',
       likes: 27,
       comments: 14,
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      likeCount: 27,
+      commentCount: 14,
       images: ['https://source.unsplash.com/random/800x600?basketball']
     }
   ],
@@ -137,17 +133,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'StateAthletics',
         name: 'CA Athletics',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=6',
-        school: 'State Office',
         badges: [{ badge_name: 'Official', type: 'admin' }],
-        points: 0,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 600 * 24 * 60 * 60 * 1000)
       },
       isAnonymous: false,
       schoolName: 'State Office',
       likes: 86,
       comments: 23,
+      timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      likeCount: 86,
+      commentCount: 23,
       images: ['https://source.unsplash.com/random/800x600?stadium']
     },
     {
@@ -158,20 +153,21 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'SafetyCzar',
         name: 'Safety Committee',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=7',
-        school: 'State Office',
         badges: [{ badge_name: 'Official', type: 'admin' }],
-        points: 0,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 700 * 24 * 60 * 60 * 1000)
       },
       isAnonymous: false,
       schoolName: 'State Office',
       likes: 41,
       comments: 16,
+      timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
       createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      likeCount: 41,
+      commentCount: 16,
       images: []
     }
-  ]
+  ],
+  'all': [], // Empty for now
+  'athletes': [] // Empty for now
 };
 
 export const useFeed = (feedType: FeedType) => {
@@ -189,7 +185,7 @@ export const useFeed = (feedType: FeedType) => {
     setPosts(currentPosts => 
       currentPosts.map(post => 
         post.id === postId 
-          ? { ...post, likes: post.likes + 1 } 
+          ? { ...post, likes: post.likes + 1, likeCount: post.likeCount + 1 } 
           : post
       )
     );
@@ -205,7 +201,7 @@ export const useFeed = (feedType: FeedType) => {
     setPosts(currentPosts => 
       currentPosts.map(post => 
         post.id === postId 
-          ? { ...post, likes: Math.max(0, post.likes - 1) } 
+          ? { ...post, likes: Math.max(0, post.likes - 1), likeCount: Math.max(0, post.likeCount - 1) } 
           : post
       )
     );
@@ -218,15 +214,26 @@ export const useFeed = (feedType: FeedType) => {
   
   // Demo mode - handle creating posts
   const createPost = ({ content, isAnonymous, images }: { content: string; isAnonymous: boolean; images: string[] }) => {
+    if (!user && !isAnonymous) return;
+    
     const newPost: Post = {
       id: `new-post-${Date.now()}`,
       content,
-      author: isAnonymous ? null : user,
+      author: isAnonymous ? null : {
+        id: user?.id || '',
+        username: user?.username || '',
+        name: user?.name || '',
+        avatar: user?.avatar,
+        badges: user?.badges || [],
+      },
       isAnonymous,
       schoolName: 'Westview High',
       likes: 0,
       comments: 0,
+      timestamp: new Date(),
       createdAt: new Date(),
+      likeCount: 0,
+      commentCount: 0,
       images
     };
     

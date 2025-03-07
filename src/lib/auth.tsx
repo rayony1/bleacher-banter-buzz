@@ -10,6 +10,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isEmailConfirmed: boolean;
   sendMagicLink: (email: string, redirectTo?: string) => Promise<{ error: Error | null }>;
+  isMagicLink?: boolean;
 }
 
 // Demo user for demo mode
@@ -18,7 +19,7 @@ const DEMO_USER: User = {
   username: 'BleacherFan',
   name: 'Demo User',
   school: 'Westview High',
-  badges: [{ name: 'Student', type: 'school' }],
+  badges: [{ id: 'badge-1', name: 'Student', type: 'student' }],
   points: 250,
   isAthlete: false,
   createdAt: new Date(),
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   isEmailConfirmed: false,
   sendMagicLink: async () => ({ error: null }),
+  isMagicLink: false,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [isEmailConfirmed, setIsEmailConfirmed] = useState<boolean>(true);
+  const [isMagicLink, setIsMagicLink] = useState<boolean>(false);
 
   // These functions are kept but simplified for demo mode
   const signOut = async () => {
@@ -64,7 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       error, 
       signOut, 
       isEmailConfirmed,
-      sendMagicLink
+      sendMagicLink,
+      isMagicLink
     }}>
       {children}
     </AuthContext.Provider>

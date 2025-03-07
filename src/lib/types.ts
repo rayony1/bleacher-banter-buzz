@@ -1,4 +1,3 @@
-
 export type User = {
   id: string;
   username: string;
@@ -12,10 +11,11 @@ export type User = {
 };
 
 export type Badge = {
-  id: string;
+  id?: string;
   name: string;
-  type: 'school' | 'team' | 'achievement';
+  type: 'school' | 'team' | 'achievement' | 'staff' | 'athlete' | 'student' | 'admin';
   icon?: string;
+  badge_name?: string;
 };
 
 export type Post = {

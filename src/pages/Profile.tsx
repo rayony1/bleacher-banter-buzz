@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -9,12 +10,15 @@ import { User, Post } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/lib/auth';
 
 const Profile = () => {
   const { toast } = useToast();
   const { isMobile } = useMobile();
+  const { user } = useAuth();
   
-  const user: User = {
+  // If we don't have a user from auth, use this demo user as fallback
+  const profileUser: User = user || {
     id: '1',
     username: 'sarah_j',
     name: 'Sarah Johnson',
@@ -35,11 +39,11 @@ const Profile = () => {
       id: '1',
       content: "Our basketball team is looking incredible in practice today! Can't wait for the game on Friday!",
       author: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        avatar: user.avatar,
-        badges: user.badges
+        id: profileUser.id,
+        username: profileUser.username,
+        name: profileUser.name,
+        avatar: profileUser.avatar,
+        badges: profileUser.badges
       },
       isAnonymous: false,
       school: 'Eastside High',
@@ -55,11 +59,11 @@ const Profile = () => {
       id: '3',
       content: "Congrats to our volleyball team for winning the district championship! What an amazing season! #GoEastside",
       author: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        avatar: user.avatar,
-        badges: user.badges
+        id: profileUser.id,
+        username: profileUser.username,
+        name: profileUser.name,
+        avatar: profileUser.avatar,
+        badges: profileUser.badges
       },
       isAnonymous: false,
       school: 'Eastside High',
@@ -108,7 +112,7 @@ const Profile = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-1">
-                <ProfileCard user={user} />
+                <ProfileCard user={profileUser} />
               </div>
               
               <div className="md:col-span-2">

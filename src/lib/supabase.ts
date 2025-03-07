@@ -15,15 +15,15 @@ export const supabase = {
   from: () => ({
     select: () => ({
       eq: () => ({
-        maybeSingle: async () => null,
-        single: async () => null,
-        order: () => ({ limit: async () => ({ data: [] }) }),
+        maybeSingle: async () => ({ data: null, error: null }),
+        single: async () => ({ data: null, error: null }),
+        order: () => ({ limit: async () => ({ data: [], error: null }) }),
       }),
       like: () => ({
-        order: () => ({ limit: async () => ({ data: [] }) }),
+        order: () => ({ limit: async () => ({ data: [], error: null }) }),
       }),
       order: () => ({
-        limit: async () => ({ data: [] }),
+        limit: async () => ({ data: [], error: null }),
       }),
     }),
     insert: () => ({
@@ -55,6 +55,13 @@ export const supabase = {
   functions: {
     invoke: async () => ({ data: null, error: null }),
   },
+  // Add mock channel functionality
+  channel: (channel: string) => ({
+    on: (event: string, callback: Function) => ({
+      subscribe: () => {}
+    })
+  }),
+  removeChannel: (channel: any) => {}
 };
 
 // All the functions below are kept for type safety but don't do anything
