@@ -143,24 +143,12 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
     });
     
     try {
-      const { data: authData, error } = await signIn(data.email, data.password);
+      toast({
+        title: 'Demo Mode',
+        description: 'Authentication is simulated in demo mode.',
+      });
       
-      if (error) {
-        console.error('Login error:', error);
-        setErrorMessage(error.message);
-        toast({
-          title: 'Authentication failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else if (authData?.user) {
-        console.log('Login successful, user:', authData.user.id);
-        toast({
-          title: 'Welcome back!',
-          description: 'You have successfully signed in.',
-        });
-        navigate('/feed');
-      }
+      navigate('/feed');
     } catch (err) {
       console.error('Exception during login:', err);
       setErrorMessage('An unexpected error occurred. Please try again.');
@@ -185,37 +173,18 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
     });
     
     try {
-      const { data: authData, error } = await signUp(
-        data.email, 
-        data.password, 
-        data.username, 
-        data.schoolId
-      );
+      toast({
+        title: 'Demo Mode',
+        description: 'Registration is simulated in demo mode.',
+      });
       
-      if (error) {
-        console.error('Registration error:', error);
-        setErrorMessage(error.message);
-        toast({
-          title: "Registration failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        console.log('Registration successful:', authData);
-        toast({
-          title: "Account created!",
-          description: "Please check your email for a confirmation link to complete your registration.",
-        });
-        
-        if (setEmailForConfirmation) {
-          setEmailForConfirmation(data.email);
-          
-          localStorage.setItem('pendingConfirmationEmail', data.email);
-        }
-        
-        setTab('login');
-        loginForm.setValue('email', data.email);
+      if (setEmailForConfirmation) {
+        setEmailForConfirmation(data.email);
+        localStorage.setItem('pendingConfirmationEmail', data.email);
       }
+      
+      setTab('login');
+      loginForm.setValue('email', data.email);
     } catch (err) {
       console.error('Exception during registration:', err);
       setErrorMessage('An unexpected error occurred. Please try again.');
