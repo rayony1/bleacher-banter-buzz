@@ -87,24 +87,54 @@ export const useComments = (postId: string) => {
           // Add new comment to state
           const newComment = payload.new as any;
           
-          // In a real implementation, we'd fetch the author info here
-          // For now, we'll use a placeholder
-          const commentWithAuthor: Comment = {
-            id: newComment.id,
-            content: newComment.content,
-            post_id: newComment.post_id,
-            user_id: newComment.user_id,
-            created_at: newComment.timestamp,
-            updated_at: newComment.timestamp,
-            createdAt: new Date(newComment.timestamp),
-            author: {
-              username: 'User', // In real app, fetch this
-              avatar_url: '',
-              avatar: ''
+          // Fetch user details for the new comment
+          const fetchCommentAuthor = async () => {
+            try {
+              const { data: authorData } = await supabase
+                .from('profiles')
+                .select('username, avatar_url')
+                .eq('user_id', newComment.user_id)
+                .single();
+              
+              const commentWithAuthor: Comment = {
+                id: newComment.id,
+                content: newComment.content,
+                post_id: newComment.post_id,
+                user_id: newComment.user_id,
+                created_at: newComment.timestamp,
+                updated_at: newComment.timestamp,
+                createdAt: new Date(newComment.timestamp),
+                author: {
+                  username: authorData?.username || 'User',
+                  avatar_url: authorData?.avatar_url || '',
+                  avatar: authorData?.avatar_url || ''
+                }
+              };
+              
+              setComments(prev => [commentWithAuthor, ...prev]);
+            } catch (err) {
+              console.error('Error fetching comment author:', err);
+              // Add comment without author details as fallback
+              const fallbackComment: Comment = {
+                id: newComment.id,
+                content: newComment.content,
+                post_id: newComment.post_id,
+                user_id: newComment.user_id,
+                created_at: newComment.timestamp,
+                updated_at: newComment.timestamp,
+                createdAt: new Date(newComment.timestamp),
+                author: {
+                  username: 'User',
+                  avatar_url: '',
+                  avatar: ''
+                }
+              };
+              
+              setComments(prev => [fallbackComment, ...prev]);
             }
           };
           
-          setComments(prev => [commentWithAuthor, ...prev]);
+          fetchCommentAuthor();
         }
       )
       .subscribe();
@@ -147,7 +177,8 @@ export const useComments = (postId: string) => {
         }
       };
       
-      // Add to local state (real-time subscription should handle this too)
+      // The real-time subscription should handle adding the comment to the UI
+      // But we'll manually add it as well for immediate feedback
       setComments(prev => [newComment, ...prev]);
       
       toast({
