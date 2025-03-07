@@ -14,7 +14,7 @@ const CreatePostButton = ({ onClick }: CreatePostButtonProps) => {
   return (
     <Button
       onClick={onClick}
-      className={`fixed ${isMobile ? 'bottom-20' : 'bottom-6'} right-6 rounded-full shadow-lg w-12 h-12 p-0 btn-hover z-10`}
+      className={`fixed ${isMobile ? 'bottom-20' : 'bottom-6'} right-4 md:right-6 rounded-full shadow-lg w-14 h-14 p-0 z-10 bg-blue-500 hover:bg-blue-600 text-white`}
       aria-label="Create new post"
     >
       <Plus className="h-6 w-6" />

@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { School, MapPin, Globe } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FeedType } from '@/lib/types';
-import { useMobile } from '@/hooks/use-mobile';
 
 interface FeedTabsProps {
   activeTab: FeedType;
@@ -20,45 +18,33 @@ const FeedTabs = ({
   districtName = 'Your District',
   stateName = 'Your State',
 }: FeedTabsProps) => {
-  const { isMobile } = useMobile();
-  
   return (
     <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as FeedType)} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 h-12 rounded-xl bg-muted/60">
-        <TabsTrigger value="school" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-          <School className="h-4 w-4 mr-2" />
-          <span className={isMobile ? '' : ''}>School</span>
+      <TabsList className="flex w-full h-12 bg-transparent p-0 space-x-1 border-b border-gray-200 dark:border-gray-800">
+        <TabsTrigger 
+          value="school" 
+          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
+        >
+          For You
         </TabsTrigger>
-        <TabsTrigger value="district" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-          <MapPin className="h-4 w-4 mr-2" />
-          <span className={isMobile ? '' : ''}>District</span>
+        <TabsTrigger 
+          value="district" 
+          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
+        >
+          Following
         </TabsTrigger>
-        <TabsTrigger value="state" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-          <Globe className="h-4 w-4 mr-2" />
-          <span className={isMobile ? '' : ''}>State</span>
+        <TabsTrigger 
+          value="state" 
+          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
+        >
+          Trending
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="school" className="animate-fade-in mt-2">
-        <div className="text-sm font-medium text-primary/90 flex items-center">
-          <School className="h-4 w-4 mr-2" />
-          {schoolName} Feed
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="district" className="animate-fade-in mt-2">
-        <div className="text-sm font-medium text-primary/90 flex items-center">
-          <MapPin className="h-4 w-4 mr-2" />
-          {districtName} Feed
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="state" className="animate-fade-in mt-2">
-        <div className="text-sm font-medium text-primary/90 flex items-center">
-          <Globe className="h-4 w-4 mr-2" />
-          {stateName} Feed
-        </div>
-      </TabsContent>
+      {/* We'll hide these as Twitter doesn't show subtitles under tabs */}
+      <TabsContent value="school" className="hidden"></TabsContent>
+      <TabsContent value="district" className="hidden"></TabsContent>
+      <TabsContent value="state" className="hidden"></TabsContent>
     </Tabs>
   );
 };
