@@ -37,11 +37,10 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // In demo mode, we immediately set the user to the demo user
-  const [user, setUser] = useState<User | null>(DEMO_USER);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const [isEmailConfirmed, setIsEmailConfirmed] = useState<boolean>(true);
+  const [isEmailConfirmed, setIsEmailConfirmed] = useState<boolean>(false);
   const [isMagicLink, setIsMagicLink] = useState<boolean>(false);
 
   useEffect(() => {
@@ -50,12 +49,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         // Handle sign in event
         if (session?.user) {
+          if (event === 'SIGNED_IN' && session.user.email_confirmed_at) {
+            setIsEmailConfirmed(true);
+          }
           fetchUserProfile(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
-        setUser(DEMO_USER); // For demo mode, reset to demo user
+        setUser(null);
+        setIsEmailConfirmed(false);
       }
     });
+
+    // Check initial session
+    const checkSession = async () => {
+      setIsLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        if (session.user.email_confirmed_at) {
+          setIsEmailConfirmed(true);
+        }
+        fetchUserProfile(session.user.id);
+      } else {
+        // For demo mode, use the demo user
+        setUser(DEMO_USER);
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
 
     // Cleanup subscription on unmount
     return () => {
@@ -84,7 +106,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         
         setUser(userProfile);
-        setIsEmailConfirmed(true); // In real app, check confirmed_at from auth
+      } else {
+        // For demo mode, use the demo user
+        setUser(DEMO_USER);
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch user profile'));
@@ -93,26 +117,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Could not load your profile. Please try again later.",
         variant: "destructive"
       });
+      // For demo mode, use the demo user
+      setUser(DEMO_USER);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // These functions are kept but simplified for demo mode
   const signOut = async () => {
-    toast({
-      title: "Demo Mode",
-      description: "Sign out is disabled in demo mode."
-    });
-    return Promise.resolve();
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully."
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to sign out'));
+      toast({
+        title: "Error signing out",
+        description: "Could not sign you out. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+      // For demo mode, immediately set back to demo user
+      setUser(DEMO_USER);
+    }
   };
 
   const sendMagicLink = async (email: string) => {
-    toast({
-      title: "Demo Mode",
-      description: "Magic links are disabled in demo mode."
-    });
-    return { error: null };
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+      
+      if (error) throw error;
+      
+      setIsMagicLink(true);
+      toast({
+        title: "Magic link sent",
+        description: "Check your email for a login link."
+      });
+      
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to send magic link');
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -87,7 +87,8 @@ export const useComments = (postId: string) => {
           // Add new comment to state
           const newComment = payload.new as any;
           
-          // Get author details (in real implementation we'd fetch this)
+          // In a real implementation, we'd fetch the author info here
+          // For now, we'll use a placeholder
           const commentWithAuthor: Comment = {
             id: newComment.id,
             content: newComment.content,
@@ -126,15 +127,19 @@ export const useComments = (postId: string) => {
     try {
       setIsCreatingComment(true);
       
-      // For demo mode, add comment to local state
+      const { data, error } = await addComment(postId, user.id, content);
+      
+      if (error) throw error;
+      
+      // Transform the returned data
       const newComment: Comment = {
-        id: `comment-${Date.now()}`,
-        content,
-        post_id: postId,
-        user_id: user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        createdAt: new Date(),
+        id: data.id,
+        content: data.content,
+        post_id: data.post_id,
+        user_id: data.user_id,
+        created_at: data.timestamp,
+        updated_at: data.timestamp,
+        createdAt: new Date(data.timestamp),
         author: {
           username: user.username,
           avatar_url: user.avatar,
@@ -142,10 +147,7 @@ export const useComments = (postId: string) => {
         }
       };
       
-      // In real app, we'd use Supabase
-      // const { data, error } = await addComment(postId, user.id, content);
-      // if (error) throw error;
-      
+      // Add to local state (real-time subscription should handle this too)
       setComments(prev => [newComment, ...prev]);
       
       toast({

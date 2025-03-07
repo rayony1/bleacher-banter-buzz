@@ -200,3 +200,56 @@ export const getFootballBadges = async () => {
     .select('*')
     .eq('type', 'team');
 };
+
+// File upload functions
+export const uploadFile = async (bucket: string, path: string, file: File) => {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { upsert: true });
+  
+  if (error) throw new Error(`Upload failed: ${error.message}`);
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+};
+
+// Feed functions
+export const getFeedPosts = async (feedType: 'school' | 'district' | 'state', userId: string, limit = 20) => {
+  return await supabase
+    .rpc('get_feed_posts', { feed_type: feedType, user_uuid: userId })
+    .limit(limit);
+};
+
+// Follower functions
+export const followUser = async (followerId: string, followingId: string) => {
+  return await supabase
+    .from('followers')
+    .insert({
+      follower_id: followerId,
+      following_id: followingId
+    })
+    .select()
+    .single();
+};
+
+export const unfollowUser = async (followerId: string, followingId: string) => {
+  return await supabase
+    .from('followers')
+    .delete()
+    .match({
+      follower_id: followerId,
+      following_id: followingId
+    });
+};
+
+export const getFollowers = async (userId: string) => {
+  return await supabase
+    .from('followers')
+    .select('follower_id, profiles!followers_follower_id_fkey(*)')
+    .eq('following_id', userId);
+};
+
+export const getFollowing = async (userId: string) => {
+  return await supabase
+    .from('followers')
+    .select('following_id, profiles!followers_following_id_fkey(*)')
+    .eq('follower_id', userId);
+};
