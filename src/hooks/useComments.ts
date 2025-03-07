@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
+import { supabase, getPostComments, createComment as addComment } from '@/lib/supabase';
 
 export type Comment = {
   id: string;
@@ -25,41 +27,33 @@ export const useComments = (postId: string) => {
   const { user } = useAuth();
 
   const fetchComments = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return {
-      data: [
-        {
-          id: '1',
-          content: 'Great post! Looking forward to the game.',
-          post_id: postId,
-          user_id: 'user123',
-          created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          createdAt: new Date(Date.now() - 1000 * 60 * 30),
+    try {
+      const { data, error } = await getPostComments(postId);
+      
+      if (error) throw error;
+      
+      // Transform to Comment type 
+      return {
+        data: data?.map(comment => ({
+          id: comment.id,
+          content: comment.content,
+          post_id: comment.post_id,
+          user_id: comment.user_id,
+          created_at: comment.timestamp,
+          updated_at: comment.timestamp,
+          createdAt: new Date(comment.timestamp),
           author: {
-            username: 'SportsFan',
-            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=10',
-            avatar: 'https://source.unsplash.com/random/100x100?portrait=10'
+            username: comment.author?.username || 'Anonymous',
+            avatar_url: comment.author?.avatar_url,
+            avatar: comment.author?.avatar_url
           }
-        },
-        {
-          id: '2',
-          content: 'I\'ll be there to cheer!',
-          post_id: postId,
-          user_id: 'user456',
-          created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          updated_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          createdAt: new Date(Date.now() - 1000 * 60 * 60),
-          author: {
-            username: 'TeamSupporter',
-            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=11',
-            avatar: 'https://source.unsplash.com/random/100x100?portrait=11'
-          }
-        }
-      ],
-      error: null
-    };
+        })),
+        error: null
+      };
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+      return { data: null, error: err };
+    }
   };
 
   useEffect(() => {
@@ -69,7 +63,7 @@ export const useComments = (postId: string) => {
         const { data, error } = await fetchComments();
         
         if (error) {
-          throw new Error(error.message);
+          throw new Error(error instanceof Error ? error.message : 'Failed to load comments');
         }
         
         setComments(data || []);
@@ -83,10 +77,39 @@ export const useComments = (postId: string) => {
     
     loadComments();
     
-    console.log('Setting up mock subscription for comments');
+    // Set up real-time subscription for new comments
+    const channel = supabase
+      .channel(`comments:${postId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` },
+        (payload) => {
+          // Add new comment to state
+          const newComment = payload.new as any;
+          
+          // Get author details (in real implementation we'd fetch this)
+          const commentWithAuthor: Comment = {
+            id: newComment.id,
+            content: newComment.content,
+            post_id: newComment.post_id,
+            user_id: newComment.user_id,
+            created_at: newComment.timestamp,
+            updated_at: newComment.timestamp,
+            createdAt: new Date(newComment.timestamp),
+            author: {
+              username: 'User', // In real app, fetch this
+              avatar_url: '',
+              avatar: ''
+            }
+          };
+          
+          setComments(prev => [commentWithAuthor, ...prev]);
+        }
+      )
+      .subscribe();
     
     return () => {
-      console.log('Cleaning up mock subscription for comments');
+      supabase.removeChannel(channel);
     };
   }, [postId]);
 
@@ -103,6 +126,7 @@ export const useComments = (postId: string) => {
     try {
       setIsCreatingComment(true);
       
+      // For demo mode, add comment to local state
       const newComment: Comment = {
         id: `comment-${Date.now()}`,
         content,
@@ -117,6 +141,10 @@ export const useComments = (postId: string) => {
           avatar: user.avatar
         }
       };
+      
+      // In real app, we'd use Supabase
+      // const { data, error } = await addComment(postId, user.id, content);
+      // if (error) throw error;
       
       setComments(prev => [newComment, ...prev]);
       
@@ -142,14 +170,12 @@ export const useComments = (postId: string) => {
     }
   };
 
-  const addComment = createComment;
-
   return {
     comments,
     isLoading,
     error,
     createComment,
     isCreatingComment,
-    addComment
+    addComment: createComment
   };
 };
