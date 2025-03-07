@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,7 @@ const Scoreboard = () => {
   const filteredGames = games
     .filter(game => {
       if (activeTab === 'school') {
-        return game.homeTeam.id === userSchoolId || game.awayTeam.id === userSchoolId;
+        return game.home_team_id === userSchoolId || game.away_team_id === userSchoolId;
       }
       if (activeTab === 'live') {
         return game.status === 'live';
@@ -32,7 +31,7 @@ const Scoreboard = () => {
     })
     .filter(game => {
       if (sportFilter !== 'all') {
-        return game.sportType === sportFilter;
+        return game.sport_type === sportFilter;
       }
       return true;
     })
@@ -40,8 +39,8 @@ const Scoreboard = () => {
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
         return (
-          game.homeTeam?.name?.toLowerCase().includes(search) ||
-          game.awayTeam?.name?.toLowerCase().includes(search) ||
+          game.home_team?.school_name?.toLowerCase().includes(search) ||
+          game.away_team?.school_name?.toLowerCase().includes(search) ||
           game.location?.toLowerCase().includes(search)
         );
       }
@@ -55,9 +54,9 @@ const Scoreboard = () => {
     }
     
     if (a.status === 'upcoming') {
-      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+      return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
     } else {
-      return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+      return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
     }
   });
 
@@ -113,13 +112,13 @@ const Scoreboard = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : sortedGames.length > 0 ? (
-              sortedGames.map((game) => (
+              sortedGames.map((dbGame) => (
                 <GameAdapter 
-                  key={game.id} 
-                  dbGame={game} 
+                  key={dbGame.game_id} 
+                  dbGame={dbGame} 
                   currentUserSchoolId={userSchoolId}
                 >
-                  {(adaptedGame) => <GameCard game={adaptedGame} />}
+                  {(game) => <GameCard game={game} />}
                 </GameAdapter>
               ))
             ) : (

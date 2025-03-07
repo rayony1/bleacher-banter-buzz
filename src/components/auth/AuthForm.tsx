@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
@@ -19,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AuthFormType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { signIn, signUp, getSchools } from '@/lib/supabase';
+import { signIn, signUp, getSchools, sendMagicLink } from '@/lib/supabase';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Mail } from 'lucide-react';
@@ -61,9 +60,6 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
   const { toast } = useToast();
   const location = useLocation();
   const { sendMagicLink } = useAuth();
-  
-  // Add the missing isMagicLink variable
-  const isMagicLink = location.search.includes('magic_link=true');
   
   useEffect(() => {
     const autoDemoLogin = async () => {
