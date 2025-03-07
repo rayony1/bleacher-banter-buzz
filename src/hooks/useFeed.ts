@@ -17,18 +17,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'CoachJohnson',
         name: 'Coach Johnson',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=1',
-        school: 'Westview High',
-        badges: [{ badge_name: 'Coach', type: 'staff' }],
-        points: 540,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+        badges: [{ badge_name: 'Coach', type: 'school' }], // Changed 'staff' to 'school'
       },
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       isAnonymous: false,
       schoolName: 'Westview High',
-      likes: 24,
-      comments: 8,
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      images: []
+      likeCount: 24,
+      commentCount: 8,
+      images: [],
+      liked: false
     },
     {
       id: 'post2',
@@ -38,29 +36,29 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'TrackStar22',
         name: 'Jamie Rodriguez',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=2',
-        school: 'Westview High',
-        badges: [{ badge_name: 'Athlete', type: 'athlete' }],
-        points: 320,
-        isAthlete: true,
-        createdAt: new Date(Date.now() - 300 * 24 * 60 * 60 * 1000)
+        badges: [{ badge_name: 'Athlete', type: 'team' }], // Changed 'athlete' to 'team'
       },
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       isAnonymous: false,
       schoolName: 'Westview High',
-      likes: 42,
-      comments: 12,
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      images: ['https://source.unsplash.com/random/800x600?track']
+      likeCount: 42,
+      commentCount: 12,
+      images: ['https://source.unsplash.com/random/800x600?track'],
+      liked: false
     },
     {
       id: 'post3',
       content: "Does anyone know when basketball tryouts are happening? The website hasn't been updated.",
       author: null,
+      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
       isAnonymous: true,
       schoolName: 'Westview High',
-      likes: 3,
-      comments: 5,
-      createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      images: []
+      likeCount: 3,
+      commentCount: 5,
+      images: [],
+      liked: false
     },
     {
       id: 'post4',
@@ -70,18 +68,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'BleacherFan',
         name: 'Demo User',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=3',
-        school: 'Westview High',
-        badges: [{ badge_name: 'Student', type: 'student' }],
-        points: 250,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000)
+        badges: [{ badge_name: 'Student', type: 'school' }], // Changed 'student' to 'school'
       },
+      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
       isAnonymous: false,
       schoolName: 'Westview High',
-      likes: 18,
-      comments: 2,
-      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      images: ['https://source.unsplash.com/random/800x600?gym']
+      likeCount: 18,
+      commentCount: 2,
+      images: ['https://source.unsplash.com/random/800x600?gym'],
+      liked: false
     }
   ],
   'district': [
@@ -93,18 +89,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'DistrictAdmin',
         name: 'District Office',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=4',
-        school: 'District Office',
-        badges: [{ badge_name: 'Admin', type: 'admin' }],
-        points: 0,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 500 * 24 * 60 * 60 * 1000)
+        badges: [{ badge_name: 'Admin', type: 'school' }], // Changed 'admin' to 'school'
       },
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       isAnonymous: false,
       schoolName: 'District Office',
-      likes: 32,
-      comments: 7,
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      images: []
+      likeCount: 32,
+      commentCount: 7,
+      images: [],
+      liked: false
     },
     {
       id: 'post6',
@@ -114,18 +108,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'SportsFan',
         name: 'Taylor Johnson',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=5',
-        school: 'Del Norte High',
-        badges: [{ badge_name: 'Student', type: 'student' }],
-        points: 180,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 450 * 24 * 60 * 60 * 1000)
+        badges: [{ badge_name: 'Student', type: 'school' }], // Changed 'student' to 'school'
       },
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       isAnonymous: false,
       schoolName: 'Del Norte High',
-      likes: 27,
-      comments: 14,
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      images: ['https://source.unsplash.com/random/800x600?basketball']
+      likeCount: 27,
+      commentCount: 14,
+      images: ['https://source.unsplash.com/random/800x600?basketball'],
+      liked: false
     }
   ],
   'state': [
@@ -137,18 +129,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'StateAthletics',
         name: 'CA Athletics',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=6',
-        school: 'State Office',
-        badges: [{ badge_name: 'Official', type: 'admin' }],
-        points: 0,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 600 * 24 * 60 * 60 * 1000)
+        badges: [{ badge_name: 'Official', type: 'school' }], // Changed 'admin' to 'school'
       },
+      timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       isAnonymous: false,
       schoolName: 'State Office',
-      likes: 86,
-      comments: 23,
-      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-      images: ['https://source.unsplash.com/random/800x600?stadium']
+      likeCount: 86,
+      commentCount: 23,
+      images: ['https://source.unsplash.com/random/800x600?stadium'],
+      liked: false
     },
     {
       id: 'post8',
@@ -158,18 +148,16 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
         username: 'SafetyCzar',
         name: 'Safety Committee',
         avatar: 'https://source.unsplash.com/random/100x100?portrait=7',
-        school: 'State Office',
-        badges: [{ badge_name: 'Official', type: 'admin' }],
-        points: 0,
-        isAthlete: false,
-        createdAt: new Date(Date.now() - 700 * 24 * 60 * 60 * 1000)
+        badges: [{ badge_name: 'Official', type: 'school' }], // Changed 'admin' to 'school'
       },
+      timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
       isAnonymous: false,
       schoolName: 'State Office',
-      likes: 41,
-      comments: 16,
-      createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-      images: []
+      likeCount: 41,
+      commentCount: 16,
+      images: [],
+      liked: false
     }
   ]
 };
@@ -189,7 +177,7 @@ export const useFeed = (feedType: FeedType) => {
     setPosts(currentPosts => 
       currentPosts.map(post => 
         post.id === postId 
-          ? { ...post, likes: post.likes + 1 } 
+          ? { ...post, likeCount: post.likeCount + 1 } // Changed likes to likeCount
           : post
       )
     );
@@ -205,7 +193,7 @@ export const useFeed = (feedType: FeedType) => {
     setPosts(currentPosts => 
       currentPosts.map(post => 
         post.id === postId 
-          ? { ...post, likes: Math.max(0, post.likes - 1) } 
+          ? { ...post, likeCount: Math.max(0, post.likeCount - 1) } // Changed likes to likeCount
           : post
       )
     );
@@ -224,10 +212,12 @@ export const useFeed = (feedType: FeedType) => {
       author: isAnonymous ? null : user,
       isAnonymous,
       schoolName: 'Westview High',
-      likes: 0,
-      comments: 0,
+      likeCount: 0, // Changed likes to likeCount
+      commentCount: 0, // Changed comments to commentCount
+      timestamp: new Date(),
       createdAt: new Date(),
-      images
+      images,
+      liked: false
     };
     
     setPosts(currentPosts => [newPost, ...currentPosts]);

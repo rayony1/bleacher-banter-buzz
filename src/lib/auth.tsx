@@ -19,7 +19,7 @@ const DEMO_USER: User = {
   username: 'BleacherFan',
   name: 'Demo User',
   school: 'Westview High',
-  badges: [{ badge_name: 'Student', type: 'student' }],
+  badges: [{ badge_name: 'Student', type: 'school' }], // Changed 'student' to 'school'
   points: 250,
   isAthlete: false,
   createdAt: new Date(),
