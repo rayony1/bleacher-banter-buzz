@@ -1,6 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, getCurrentUser, getUserProfile } from '@/lib/supabase';
+import React, { createContext, useContext, useState } from 'react';
 import { User } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -19,7 +18,7 @@ const DEMO_USER: User = {
   username: 'BleacherFan',
   name: 'Demo User',
   school: 'Westview High',
-  badges: [{ badge_name: 'Student', type: 'student' }],
+  badges: [{ name: 'Student', type: 'school' }],
   points: 250,
   isAthlete: false,
   createdAt: new Date(),
@@ -57,12 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     return { error: null };
   };
-
-  // No need for auth state changes in demo mode
-  useEffect(() => {
-    console.log('Auth provider loaded in demo mode');
-    // Demo user is already set
-  }, []);
 
   return (
     <AuthContext.Provider value={{ 
