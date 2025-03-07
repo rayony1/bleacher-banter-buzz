@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
@@ -10,9 +9,11 @@ export type Comment = {
   user_id: string;
   created_at: string;
   updated_at: string;
+  createdAt: Date;
   author: {
     username: string;
     avatar_url?: string;
+    avatar?: string;
   };
 };
 
@@ -20,14 +21,12 @@ export const useComments = (postId: string) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isCreatingComment, setIsCreatingComment] = useState(false);
   const { user } = useAuth();
 
-  // Mock function to fetch comments
   const fetchComments = async () => {
-    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Return mock data
     return {
       data: [
         {
@@ -37,9 +36,11 @@ export const useComments = (postId: string) => {
           user_id: 'user123',
           created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
           updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+          createdAt: new Date(Date.now() - 1000 * 60 * 30),
           author: {
             username: 'SportsFan',
-            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=10'
+            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=10',
+            avatar: 'https://source.unsplash.com/random/100x100?portrait=10'
           }
         },
         {
@@ -49,9 +50,11 @@ export const useComments = (postId: string) => {
           user_id: 'user456',
           created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
           updated_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+          createdAt: new Date(Date.now() - 1000 * 60 * 60),
           author: {
             username: 'TeamSupporter',
-            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=11'
+            avatar_url: 'https://source.unsplash.com/random/100x100?portrait=11',
+            avatar: 'https://source.unsplash.com/random/100x100?portrait=11'
           }
         }
       ],
@@ -59,7 +62,6 @@ export const useComments = (postId: string) => {
     };
   };
 
-  // Load comments
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -81,16 +83,14 @@ export const useComments = (postId: string) => {
     
     loadComments();
     
-    // In a real app, we would set up real-time subscription
-    // This would be replaced with actual Supabase subscription
+    console.log('Setting up mock subscription for comments');
     
     return () => {
-      // Cleanup function for real subscriptions would go here
+      console.log('Cleaning up mock subscription for comments');
     };
   }, [postId]);
 
-  // Add comment
-  const addComment = async (content: string) => {
+  const createComment = async (content: string) => {
     if (!user) {
       toast({
         title: "Not authorized",
@@ -101,7 +101,8 @@ export const useComments = (postId: string) => {
     }
     
     try {
-      // Mock new comment
+      setIsCreatingComment(true);
+      
       const newComment: Comment = {
         id: `comment-${Date.now()}`,
         content,
@@ -109,13 +110,14 @@ export const useComments = (postId: string) => {
         user_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        createdAt: new Date(),
         author: {
           username: user.username,
-          avatar_url: user.avatar
+          avatar_url: user.avatar,
+          avatar: user.avatar
         }
       };
       
-      // Add to local state
       setComments(prev => [newComment, ...prev]);
       
       toast({
@@ -135,13 +137,19 @@ export const useComments = (postId: string) => {
       });
       
       return { error };
+    } finally {
+      setIsCreatingComment(false);
     }
   };
+
+  const addComment = createComment;
 
   return {
     comments,
     isLoading,
     error,
+    createComment,
+    isCreatingComment,
     addComment
   };
 };

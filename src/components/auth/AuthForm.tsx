@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AuthFormType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { signIn, signUp, getSchools, sendMagicLink } from '@/lib/supabase';
+import { signIn, signUp, getSchools, sendMagicLink as supabaseSendMagicLink } from '@/lib/supabase';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Mail } from 'lucide-react';
@@ -59,7 +59,7 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
-  const { sendMagicLink } = useAuth();
+  const { isMagicLink, sendMagicLink } = useAuth();
   
   useEffect(() => {
     const autoDemoLogin = async () => {
@@ -236,7 +236,7 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
     });
     
     try {
-      const { error } = await sendMagicLink(data.email, `${window.location.origin}/auth?magic_link=true`);
+      const { error } = await sendMagicLink(data.email);
       
       if (error) {
         console.error('Magic link error:', error);

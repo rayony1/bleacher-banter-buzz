@@ -9,8 +9,8 @@ interface AuthContextType {
   error: Error | null;
   signOut: () => Promise<void>;
   isEmailConfirmed: boolean;
-  sendMagicLink: (email: string, redirectTo?: string) => Promise<{ error: Error | null }>;
-  isMagicLink?: boolean;
+  sendMagicLink: (email: string) => Promise<{ error: Error | null }>;
+  isMagicLink: boolean;
 }
 
 // Demo user for demo mode

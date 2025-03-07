@@ -1,19 +1,25 @@
-
 import React from 'react';
 import { Game } from '@/lib/types';
 
 interface GameAdapterProps {
-  dbGame: any; // The game data returned from Supabase
+  dbGame?: any; // The game data returned from Supabase
   currentUserSchoolId?: string | null;
   children: (game: Game) => React.ReactNode;
+  game?: Game; // Add this to support direct Game object
 }
 
 // This component adapts the database game format to our frontend Game type
-const GameAdapter: React.FC<GameAdapterProps> = ({ dbGame, currentUserSchoolId, children }) => {
+const GameAdapter: React.FC<GameAdapterProps> = ({ dbGame, game, currentUserSchoolId, children }) => {
+  // If a direct game object is provided, use it
+  if (game) {
+    return <>{children(game)}</>;
+  }
+  
+  // Otherwise transform the database game
   if (!dbGame) return null;
 
   // Transform the database game to our Game type
-  const game: Game = {
+  const adaptedGame: Game = {
     id: dbGame.game_id,
     homeTeam: {
       id: dbGame.home_team_id,
@@ -47,7 +53,7 @@ const GameAdapter: React.FC<GameAdapterProps> = ({ dbGame, currentUserSchoolId, 
     weather: dbGame.weather || (dbGame.location?.includes('Field') ? 'Sunny, 72°F' : 'Indoor'),
   };
 
-  return <>{children(game)}</>;
+  return <>{children(adaptedGame)}</>;
 };
 
 export default GameAdapter;
