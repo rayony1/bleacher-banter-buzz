@@ -24,45 +24,39 @@ const FeedTabs = ({
   
   return (
     <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as FeedType)} className="w-full">
-      <TabsList className={`grid w-full grid-cols-3 ${isMobile ? 'mb-3' : 'mb-6'}`}>
-        <TabsTrigger value="school" className="flex items-center gap-2">
-          <School className="h-4 w-4" />
-          <span className={isMobile ? 'text-xs' : 'hidden sm:inline'}>School</span>
+      <TabsList className="grid w-full grid-cols-3 h-12 rounded-xl bg-muted/60">
+        <TabsTrigger value="school" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <School className="h-4 w-4 mr-2" />
+          <span className={isMobile ? '' : ''}>School</span>
         </TabsTrigger>
-        <TabsTrigger value="district" className="flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          <span className={isMobile ? 'text-xs' : 'hidden sm:inline'}>District</span>
+        <TabsTrigger value="district" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <MapPin className="h-4 w-4 mr-2" />
+          <span className={isMobile ? '' : ''}>District</span>
         </TabsTrigger>
-        <TabsTrigger value="state" className="flex items-center gap-2">
-          <Globe className="h-4 w-4" />
-          <span className={isMobile ? 'text-xs' : 'hidden sm:inline'}>State</span>
+        <TabsTrigger value="state" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <Globe className="h-4 w-4 mr-2" />
+          <span className={isMobile ? '' : ''}>State</span>
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="school" className="animate-fade-in">
-        <div className={`bg-primary/5 rounded-md py-2 px-3 ${isMobile ? 'mb-3 text-sm' : 'mb-6'}`}>
-          <h2 className="text-sm font-medium text-primary flex items-center">
-            <School className="h-4 w-4 mr-2" />
-            {schoolName} Feed
-          </h2>
+      <TabsContent value="school" className="animate-fade-in mt-2">
+        <div className="text-sm font-medium text-primary/90 flex items-center">
+          <School className="h-4 w-4 mr-2" />
+          {schoolName} Feed
         </div>
       </TabsContent>
       
-      <TabsContent value="district" className="animate-fade-in">
-        <div className={`bg-primary/5 rounded-md py-2 px-3 ${isMobile ? 'mb-3 text-sm' : 'mb-6'}`}>
-          <h2 className="text-sm font-medium text-primary flex items-center">
-            <MapPin className="h-4 w-4 mr-2" />
-            {districtName} Feed
-          </h2>
+      <TabsContent value="district" className="animate-fade-in mt-2">
+        <div className="text-sm font-medium text-primary/90 flex items-center">
+          <MapPin className="h-4 w-4 mr-2" />
+          {districtName} Feed
         </div>
       </TabsContent>
       
-      <TabsContent value="state" className="animate-fade-in">
-        <div className={`bg-primary/5 rounded-md py-2 px-3 ${isMobile ? 'mb-3 text-sm' : 'mb-6'}`}>
-          <h2 className="text-sm font-medium text-primary flex items-center">
-            <Globe className="h-4 w-4 mr-2" />
-            {stateName} Feed
-          </h2>
+      <TabsContent value="state" className="animate-fade-in mt-2">
+        <div className="text-sm font-medium text-primary/90 flex items-center">
+          <Globe className="h-4 w-4 mr-2" />
+          {stateName} Feed
         </div>
       </TabsContent>
     </Tabs>

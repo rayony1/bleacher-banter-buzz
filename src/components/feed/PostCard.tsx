@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Share, MoreHorizontal, Send, X } from 'lucide-react';
@@ -15,6 +16,7 @@ import { Post, PostCardProps } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { useComments, Comment } from '@/hooks/useComments';
 import { useAuth } from '@/lib/auth';
+import { Card } from '@/components/ui/card';
 
 const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostCardProps) => {
   const [liked, setLiked] = useState(false);
@@ -53,33 +55,33 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
   const timeAgo = formatDistanceToNow(post.createdAt, { addSuffix: true });
   
   return (
-    <div className="bg-white dark:bg-gray-950 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden card-hover transition-all mb-4">
+    <Card className="border-gray-200 dark:border-gray-800 overflow-hidden transition-colors">
       <div className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center">
+        <div className="flex items-start justify-between space-y-0 pb-2">
+          <div className="flex items-center space-x-3">
             {post.isAnonymous ? (
-              <div className="flex items-center">
-                <Avatar className="h-9 w-9 mr-3 bg-primary/10">
+              <>
+                <Avatar className="h-10 w-10 bg-primary/10">
                   <AvatarFallback className="text-primary font-semibold">BB</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium">Bleacher Banter</div>
-                  <div className="text-xs text-muted-foreground flex items-center">
+                  <div className="font-semibold">Bleacher Banter</div>
+                  <div className="text-xs text-muted-foreground">
                     Anonymous • {post.schoolName}
                   </div>
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center">
-                <Avatar className="h-9 w-9 mr-3">
+              <>
+                <Avatar className="h-10 w-10">
                   <AvatarImage src={post.author?.avatar} />
                   <AvatarFallback className="bg-primary/10 text-primary">
                     {post.author?.name.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium">{post.author?.name}</div>
-                  <div className="flex items-center space-x-2">
+                  <div className="font-semibold">{post.author?.name}</div>
+                  <div className="flex items-center gap-1 flex-wrap">
                     {post.author?.badges && post.author.badges.map((badge) => (
                       <Badge key={badge.id} variant="secondary" className="text-xs py-0">
                         {badge.name}
@@ -87,15 +89,15 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
                     ))}
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
           
-          <div className="flex items-center space-x-1 text-muted-foreground">
-            <span className="text-xs">{timeAgo}</span>
+          <div className="flex items-center space-x-1">
+            <span className="text-xs text-muted-foreground">{timeAgo}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -107,12 +109,12 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
           </div>
         </div>
         
-        <div className="mb-4">
-          <p className="text-foreground">{post.content}</p>
+        <div className="mt-2 mb-3">
+          <p className="text-[15px] leading-normal text-foreground">{post.content}</p>
         </div>
         
         {post.images && post.images.length > 0 && (
-          <div className={`grid gap-2 mb-4 ${
+          <div className={`grid gap-2 mb-3 ${
             post.images.length === 1 ? 'grid-cols-1' : 
             post.images.length === 2 ? 'grid-cols-2' : 
             post.images.length >= 3 ? 'grid-cols-3' : ''
@@ -140,7 +142,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex items-center space-x-1 ${liked ? 'text-red-500' : ''}`}
+            className={`flex items-center space-x-1 rounded-full ${liked ? 'text-red-500' : ''}`}
             onClick={handleLike}
             disabled={disableInteractions}
           >
@@ -151,7 +153,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
           <Button 
             variant="ghost" 
             size="sm" 
-            className="flex items-center space-x-1"
+            className="flex items-center space-x-1 rounded-full"
             onClick={() => setShowComments(!showComments)}
           >
             <MessageCircle className="h-4 w-4" />
@@ -161,7 +163,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
           <Button 
             variant="ghost" 
             size="sm" 
-            className="flex items-center space-x-1"
+            className="flex items-center space-x-1 rounded-full"
             disabled={disableInteractions}
           >
             <Share className="h-4 w-4" />
@@ -169,7 +171,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
         </div>
         
         {showComments && (
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
             {user && (
               <form onSubmit={handleSubmitComment} className="flex gap-2 mb-4">
                 <Avatar className="h-8 w-8 flex-shrink-0">
@@ -183,14 +185,14 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Write a comment..."
-                    className="min-h-[60px] flex-1"
+                    className="min-h-[60px] flex-1 text-sm resize-none"
                     disabled={disableInteractions}
                   />
                   <Button 
                     type="submit" 
                     size="sm" 
                     variant="ghost" 
-                    className="mb-1"
+                    className="rounded-full mb-1 h-9 w-9 p-0"
                     disabled={isCreatingComment || commentText.trim() === '' || disableInteractions}
                   >
                     <Send className="h-4 w-4" />
@@ -199,7 +201,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
               </form>
             )}
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               {isLoadingComments ? (
                 <p className="text-center text-sm text-muted-foreground py-2">Loading comments...</p>
               ) : comments && comments.length > 0 ? (
@@ -213,7 +215,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 
@@ -233,7 +235,7 @@ const CommentItem = ({ comment }: CommentItemProps) => {
         </AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+        <div className="bg-muted/50 rounded-xl p-3">
           <div className="font-medium text-sm">{comment.author?.username}</div>
           <p className="text-sm">{comment.content}</p>
         </div>

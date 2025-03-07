@@ -15,6 +15,7 @@ import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
 import { Post, FeedType } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 const Feed = () => {
   const { isMobile } = useMobile();
@@ -45,14 +46,14 @@ const Feed = () => {
   // Loading state
   if (isUserLoading || (isLoading && !posts)) {
     return (
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-background">
         <Header />
-        <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'} px-4`}>
-          <div className="container mx-auto max-w-4xl">
+        <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-20 pb-16'}`}>
+          <div className="max-w-xl mx-auto px-2">
             <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
-            <div className="mt-6 space-y-6">
+            <div className="mt-3 space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white dark:bg-gray-950 rounded-lg shadow p-5 space-y-4">
+                <Card key={i} className="p-4 border-gray-200 dark:border-gray-800 space-y-3">
                   <div className="flex items-center space-x-3">
                     <Skeleton className="h-10 w-10 rounded-full" />
                     <div className="space-y-2">
@@ -61,11 +62,12 @@ const Feed = () => {
                     </div>
                   </div>
                   <Skeleton className="h-24 w-full" />
-                  <div className="flex space-x-3">
-                    <Skeleton className="h-8 w-16" />
-                    <Skeleton className="h-8 w-16" />
+                  <div className="flex space-x-6">
+                    <Skeleton className="h-5 w-12" />
+                    <Skeleton className="h-5 w-12" />
+                    <Skeleton className="h-5 w-12" />
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           </div>
@@ -79,11 +81,11 @@ const Feed = () => {
   // Show error
   if (error) {
     return (
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-background">
         <Header />
-        <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'} px-4`}>
-          <div className="container mx-auto max-w-4xl">
-            <Alert variant="destructive" className="mb-6">
+        <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-20 pb-16'}`}>
+          <div className="max-w-xl mx-auto px-4">
+            <Alert variant="destructive" className="mb-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>
@@ -99,15 +101,15 @@ const Feed = () => {
   }
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'} px-4`}>
-        <div className="container mx-auto max-w-4xl">
+      <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-20 pb-16'}`}>
+        <div className="max-w-xl mx-auto px-2">
           
           {/* Email confirmation warning */}
           {user && !isEmailConfirmed && (
-            <Alert className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+            <Alert className="mb-4 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
               <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
               <AlertTitle className="text-amber-800 dark:text-amber-400">Email not confirmed</AlertTitle>
               <AlertDescription className="text-amber-700 dark:text-amber-300">
@@ -125,11 +127,11 @@ const Feed = () => {
           
           <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
           
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end mt-4 mb-3">
             <CreatePostButton onClick={handleCreatePostClick} />
           </div>
           
-          <div className="mt-6 space-y-6">
+          <div className="space-y-3">
             {posts && posts.length > 0 ? (
               posts.map((post: Post) => (
                 <PostCard 
@@ -141,13 +143,13 @@ const Feed = () => {
                 />
               ))
             ) : (
-              <div className="bg-white dark:bg-gray-950 rounded-lg shadow p-8 text-center">
+              <Card className="p-6 text-center border-gray-200 dark:border-gray-800">
                 <h3 className="text-lg font-semibold mb-2">No posts yet</h3>
                 <p className="text-gray-500 dark:text-gray-400 mb-4">
                   Be the first to post in this feed!
                 </p>
                 <CreatePostButton onClick={handleCreatePostClick} />
-              </div>
+              </Card>
             )}
           </div>
         </div>
