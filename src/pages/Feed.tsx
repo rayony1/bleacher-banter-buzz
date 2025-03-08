@@ -1,20 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, MessageSquare, AlertTriangle, Plus, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import BottomNav from '@/components/layout/BottomNav';
+import { AlertTriangle } from 'lucide-react';
 import PostCard from '@/components/feed/PostCard';
 import FeedTabs from '@/components/feed/FeedTabs';
-import CreatePostButton from '@/components/feed/CreatePostButton';
 import { useFeed } from '@/hooks/useFeed';
 import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
 import { Post, FeedType } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import BottomNav from '@/components/layout/BottomNav';
+import Footer from '@/components/layout/Footer';
+import { Plus } from 'lucide-react';
 
 const Feed = () => {
   const { isMobile } = useMobile();
@@ -69,23 +70,20 @@ const Feed = () => {
           <div className="max-w-[600px] mx-auto">
             <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
             
-            <div className="animate-pulse space-y-0">
+            <div className="animate-pulse space-y-4 px-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white dark:bg-gray-900 rounded-xl shadow-sm m-4 p-4">
-                  <div className="flex space-x-3">
-                    <Skeleton className="h-12 w-12 rounded-full border-2 border-[#2DD4BF]" />
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                      <Skeleton className="h-16 w-full" />
-                      <div className="flex justify-between">
-                        <Skeleton className="h-5 w-10" />
-                        <Skeleton className="h-5 w-10" />
-                        <Skeleton className="h-5 w-10" />
-                        <Skeleton className="h-5 w-10" />
-                      </div>
+                <div key={i} className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-40 w-full rounded-lg" />
+                    <div className="flex justify-between pt-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-16" />
                     </div>
                   </div>
                 </div>
