@@ -55,7 +55,10 @@ const LeaderboardCard = ({ entry, rank, isCurrentUser }: LeaderboardCardProps) =
           </div>
           
           <div className="text-right">
-            <div className="font-bold">{entry.points}</div>
+            <div className="font-bold flex items-center justify-end">
+              <Trophy className="h-3 w-3 mr-1 text-amber-500" /> 
+              {entry.points}
+            </div>
             <div className="text-xs text-muted-foreground">points</div>
           </div>
         </div>
