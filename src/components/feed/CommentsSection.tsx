@@ -3,7 +3,7 @@ import React from 'react';
 import { Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Comment } from '@/hooks/useComments';
+import { Comment } from '@/hooks/comments/types';
 import CommentItem from './CommentItem';
 
 interface CommentsSectionProps {

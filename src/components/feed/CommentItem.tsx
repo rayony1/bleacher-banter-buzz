@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Heart, MessageCircle } from 'lucide-react';
-import { Comment } from '@/hooks/useComments';
+import { Comment } from '@/hooks/comments/types';
 
 interface CommentItemProps {
   comment: Comment;
