@@ -1,66 +1,31 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Post, PostCardProps } from '@/lib/types';
-import { useComments } from '@/hooks/useComments';
 import { useAuth } from '@/lib/auth';
-import { checkIfPostLiked, getLikesCount } from '@/lib/supabase';
+import { usePostLikes } from '@/hooks/usePostLikes';
 
 import PostHeader from './PostHeader';
 import PostContent from './PostContent';
 import PostImages from './PostImages';
 import PostInteractions from './PostInteractions';
-import CommentsSection from './CommentsSection';
+import PostComments from './PostComments';
 
 const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostCardProps) => {
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
   const { user } = useAuth();
-  
-  const { 
-    comments, 
-    isLoading: isLoadingComments, 
-    createComment, 
-    isCreatingComment 
-  } = useComments(post.id);
-  
-  useEffect(() => {
-    const checkLikeStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const { data } = await checkIfPostLiked(post.id, user.id);
-        setLiked(!!data);
-        
-        // Get the likes count
-        const { count } = await getLikesCount(post.id);
-        if (count !== null) setLikesCount(count);
-      } catch (err) {
-        console.error('Error checking like status:', err);
-      }
-    };
-    
-    checkLikeStatus();
-  }, [post.id, user]);
+  const { liked, likesCount, setLiked, setLikesCount } = usePostLikes(post.id, post.likes || 0);
   
   const handleLike = () => {
     if (disableInteractions) return;
     
     if (liked) {
       onUnlike(post.id);
+      setLiked(false);
+      setLikesCount(prev => Math.max(0, prev - 1));
     } else {
       onLike(post.id);
-    }
-  };
-  
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (disableInteractions) return;
-    
-    if (commentText.trim() !== '') {
-      createComment(commentText);
-      setCommentText('');
+      setLiked(true);
+      setLikesCount(prev => prev + 1);
     }
   };
   
@@ -89,18 +54,12 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
           postId={post.id}
         />
         
-        {showComments && (
-          <CommentsSection
-            comments={comments || []}
-            isLoadingComments={isLoadingComments}
-            commentText={commentText}
-            setCommentText={setCommentText}
-            handleSubmitComment={handleSubmitComment}
-            isCreatingComment={isCreatingComment}
-            disableInteractions={disableInteractions}
-            showUser={!!user}
-          />
-        )}
+        <PostComments
+          postId={post.id}
+          showComments={showComments}
+          disableInteractions={disableInteractions}
+          userLoggedIn={!!user}
+        />
       </div>
     </div>
   );

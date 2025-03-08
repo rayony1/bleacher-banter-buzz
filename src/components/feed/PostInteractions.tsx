@@ -1,9 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Heart, MessageCircle, BarChart2, Share, Bookmark } from 'lucide-react';
-import { useAuth } from '@/lib/auth';
-import { likePost, unlikePost, checkIfPostLiked, getLikesCount } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast';
 
 interface PostInteractionsProps {
   comments: number;
@@ -17,68 +14,13 @@ interface PostInteractionsProps {
 
 const PostInteractions = ({ 
   comments, 
-  likes: initialLikes, 
-  liked: initialLiked,
+  likes, 
+  liked,
   disableInteractions,
   onCommentClick, 
   onLikeClick,
   postId 
 }: PostInteractionsProps) => {
-  const { user } = useAuth();
-  const [liked, setLiked] = useState(initialLiked);
-  const [likes, setLikes] = useState(initialLikes);
-  const [isLiking, setIsLiking] = useState(false);
-
-  useEffect(() => {
-    // Check if the post is liked by the current user
-    const checkLikeStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const { data } = await checkIfPostLiked(postId, user.id);
-        setLiked(!!data);
-        
-        // Get the likes count
-        const { count } = await getLikesCount(postId);
-        if (count !== null) setLikes(count);
-      } catch (err) {
-        console.error('Error checking like status:', err);
-      }
-    };
-    
-    checkLikeStatus();
-  }, [postId, user]);
-
-  const handleLikeClick = async () => {
-    if (disableInteractions || !user || isLiking) return;
-    
-    try {
-      setIsLiking(true);
-      
-      if (liked) {
-        await unlikePost(postId, user.id);
-        setLiked(false);
-        setLikes(prev => Math.max(0, prev - 1));
-      } else {
-        await likePost(postId, user.id);
-        setLiked(true);
-        setLikes(prev => prev + 1);
-      }
-      
-      // Call the parent handler for any additional logic
-      onLikeClick();
-    } catch (err) {
-      console.error('Error handling like:', err);
-      toast({
-        title: "Error",
-        description: "Failed to update like status",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLiking(false);
-    }
-  };
-
   return (
     <div className="flex items-center justify-between mt-4 text-gray-500 dark:text-gray-400">
       <button 
@@ -104,8 +46,8 @@ const PostInteractions = ({
       
       <button 
         className={`flex items-center space-x-1 group ${liked ? 'text-[#2DD4BF]' : ''}`}
-        onClick={handleLikeClick}
-        disabled={disableInteractions || isLiking}
+        onClick={onLikeClick}
+        disabled={disableInteractions}
       >
         <div className={`p-2 rounded-full ${
           liked 
