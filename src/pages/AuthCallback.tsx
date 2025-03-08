@@ -29,17 +29,35 @@ const AuthCallback = () => {
         
         // Check if this is a confirmation link redirect
         if (queryParams.has('type') && queryParams.has('token')) {
-          // Handle email confirmation
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: queryParams.get('token') || '',
-            type: 'email' as any, // This cast is needed because of a type mismatch
-          });
+          const token = queryParams.get('token') || '';
+          const type = queryParams.get('type') || '';
+          
+          console.log(`Processing ${type} verification with token`);
+          
+          // Handle email confirmation or OTP verification
+          let verifyResult;
+          
+          if (type === 'signup' || type === 'recovery' || type === 'invite' || type === 'email_change') {
+            // Email confirmation
+            verifyResult = await supabase.auth.verifyOtp({
+              token_hash: token,
+              type: type as any,
+            });
+          } else {
+            // Handle magic link or other OTP types
+            verifyResult = await supabase.auth.verifyOtp({
+              token_hash: token,
+              type: 'email' as any,
+            });
+          }
+          
+          const { error } = verifyResult;
           
           if (error) {
-            console.error('Error verifying email:', error);
+            console.error('Error verifying:', error);
             setError(error.message);
             toast({
-              title: "Error confirming email",
+              title: "Verification failed",
               description: error.message,
               variant: "destructive"
             });
@@ -47,14 +65,26 @@ const AuthCallback = () => {
             setSuccess(true);
             localStorage.removeItem('pendingConfirmationEmail');
             toast({
-              title: "Email confirmed",
-              description: "Your email has been confirmed successfully.",
+              title: type === 'signup' ? "Email confirmed" : "Verification successful",
+              description: type === 'signup' 
+                ? "Your email has been confirmed successfully."
+                : "Your identity has been verified successfully.",
             });
             
             // Give a moment for the success message to be seen
             setTimeout(() => {
-              navigate('/feed');
+              navigate('/auth?confirmed=true');
             }, 2000);
+          }
+        } else if (location.hash) {
+          // Handle auth callback from magic link or OAuth
+          const { data, error } = await supabase.auth.getUser();
+          
+          if (error) {
+            console.error('Error getting user session:', error);
+            setError(error.message);
+          } else if (data?.user) {
+            navigate('/feed');
           }
         } else {
           // If not a confirmation link, redirect to feed
@@ -113,9 +143,9 @@ const AuthCallback = () => {
             </div>
           </div>
           <h1 className="mb-2 text-2xl font-bold">Email Confirmed!</h1>
-          <p className="mb-6 text-muted-foreground">Your email has been confirmed successfully.</p>
+          <p className="mb-6 text-muted-foreground">Your email has been confirmed successfully. Redirecting you...</p>
           
-          <Button onClick={() => navigate('/feed')}>Continue to Feed</Button>
+          <Button onClick={() => navigate('/auth?confirmed=true')}>Continue to Sign In</Button>
         </Card>
       </div>
     );
