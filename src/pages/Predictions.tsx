@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import GameCard from '@/components/predictions/GameCard';
 import { usePredictions } from '@/hooks/usePredictions';
+import { useGames } from '@/hooks/useGames';
 import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
 import { Game } from '@/lib/types';
@@ -27,12 +28,10 @@ const Predictions = () => {
     }
   }, [user, isUserLoading, navigate]);
   
-  const {
-    games,
-    isLoading,
-    error,
-    makePrediction,
-  } = usePredictions(activeTab);
+  const { predictions, isLoading: isPredictionsLoading, submitPrediction } = usePredictions();
+  const { games, isLoading: isGamesLoading, error } = useGames();
+  
+  const isLoading = isUserLoading || isPredictionsLoading || isGamesLoading;
   
   const handleCreateGameClick = () => {
     console.log('Create game button clicked');
@@ -194,9 +193,7 @@ const Predictions = () => {
                 games.map((game: Game) => (
                   <GameCard 
                     key={game.id} 
-                    game={game} 
-                    onPrediction={makePrediction}
-                    disableInteractions={false}
+                    game={game}
                   />
                 ))
               ) : (
@@ -220,9 +217,7 @@ const Predictions = () => {
                 games.map((game: Game) => (
                   <GameCard 
                     key={game.id} 
-                    game={game} 
-                    onPrediction={makePrediction}
-                    disableInteractions={true}
+                    game={game}
                   />
                 ))
               ) : (
