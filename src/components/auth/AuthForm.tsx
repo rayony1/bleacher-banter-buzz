@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Mail, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AuthFormType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { signIn, signUp, getSchools, sendMagicLink as supabaseSendMagicLink, resendConfirmationEmail } from '@/lib/supabase';
+import { signIn, signUp, getSchools, sendMagicLink as supabaseSendMagicLink } from '@/lib/supabase';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from '@/lib/auth';
 
@@ -44,29 +44,20 @@ type MagicLinkFormValues = z.infer<typeof magicLinkSchema>;
 
 interface AuthFormProps {
   defaultTab?: AuthFormType;
-  setEmailForConfirmation?: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormProps) => {
+const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const [tab, setTab] = useState<AuthFormType>(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [schools, setSchools] = useState<Array<{ school_id: string; school_name: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const [resendingEmail, setResendingEmail] = useState(false);
-  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const location = useLocation();
-  const { isMagicLink, sendMagicLink, isEmailConfirmed } = useAuth();
+  const { isMagicLink, sendMagicLink } = useAuth();
   
   useEffect(() => {
-    const storedEmail = localStorage.getItem('pendingConfirmationEmail');
-    if (storedEmail) {
-      setPendingConfirmationEmail(storedEmail);
-    }
-    
     const autoDemoLogin = async () => {
       toast({
         title: "Demo Mode Active",
@@ -183,11 +174,6 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
         description: 'Registration is simulated in demo mode.',
       });
       
-      if (setEmailForConfirmation) {
-        setEmailForConfirmation(data.email);
-        localStorage.setItem('pendingConfirmationEmail', data.email);
-      }
-      
       setTab('login');
       loginForm.setValue('email', data.email);
     } catch (err) {
@@ -227,10 +213,6 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
           title: "Magic link sent!",
           description: "Please check your email for a login link.",
         });
-        
-        if (setEmailForConfirmation) {
-          setEmailForConfirmation(data.email);
-        }
       }
     } catch (err) {
       console.error('Exception during magic link request:', err);
@@ -240,74 +222,8 @@ const AuthForm = ({ defaultTab = 'login', setEmailForConfirmation }: AuthFormPro
     }
   };
 
-  const handleResendConfirmation = async () => {
-    if (!pendingConfirmationEmail) return;
-    
-    setResendingEmail(true);
-    setErrorMessage(null);
-    
-    try {
-      const { error } = await resendConfirmationEmail(pendingConfirmationEmail);
-      
-      if (error) {
-        setErrorMessage(error.message);
-        toast({
-          title: "Failed to resend confirmation email",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Confirmation email sent",
-          description: "Please check your inbox for the confirmation link",
-        });
-      }
-    } catch (err) {
-      console.error('Error resending confirmation email:', err);
-      setErrorMessage('An unexpected error occurred. Please try again.');
-    } finally {
-      setResendingEmail(false);
-    }
-  };
-
   return (
     <div className="w-full max-w-md mx-auto">
-      {pendingConfirmationEmail && (
-        <Alert className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
-          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
-          <AlertTitle className="text-amber-800 dark:text-amber-400">Email confirmation required</AlertTitle>
-          <AlertDescription className="text-amber-700 dark:text-amber-300 mt-2">
-            <p className="mb-2">We've sent a confirmation email to <strong>{pendingConfirmationEmail}</strong>. Please check your inbox and click the confirmation link.</p>
-            <div className="flex gap-2 mt-3">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50"
-                onClick={handleResendConfirmation}
-                disabled={resendingEmail}
-              >
-                {resendingEmail ? (
-                  <>
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  'Resend confirmation email'
-                )}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50"
-                onClick={() => setPendingConfirmationEmail(null)}
-              >
-                Dismiss
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-      
       <Alert className="mb-6 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
         <Mail className="h-4 w-4 text-blue-600 dark:text-blue-500" />
         <AlertTitle className="text-blue-800 dark:text-blue-400">Demo Mode Active</AlertTitle>

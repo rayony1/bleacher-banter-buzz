@@ -48,31 +48,6 @@ export const getUserProfile = async (userId: string) => {
     .single();
 };
 
-export const resendConfirmationEmail = async (email: string) => {
-  try {
-    console.log('Resending confirmation email to:', email);
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      }
-    });
-    
-    if (error) {
-      console.error('Error resending confirmation email:', error);
-      return { error };
-    }
-    
-    console.log('Confirmation email sent successfully');
-    return { error: null };
-  } catch (err) {
-    console.error('Exception during resend:', err);
-    const error = err instanceof Error ? err : new Error('Unknown error during resend');
-    return { error };
-  }
-};
-
 export const sendMagicLink = async (email: string) => {
   return await supabase.auth.signInWithOtp({
     email,
