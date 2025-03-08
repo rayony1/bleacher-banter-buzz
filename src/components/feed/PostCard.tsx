@@ -70,10 +70,10 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm transition-all hover:shadow-md">
       <div className="p-4">
-        {/* Post header with user info and timestamp */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Post header with user info and timestamp - now vertically stacked on left */}
+        <div className="flex items-start justify-between mb-3">
           <div className="flex flex-col">
-            <div className="flex items-center space-x-1 text-sm">
+            <div className="flex items-center space-x-1">
               <span className="font-bold text-gray-900 dark:text-gray-100">
                 {post.isAnonymous ? "Bleacher Banter" : post.author?.name}
               </span>
@@ -82,10 +82,10 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
                   ✓
                 </Badge>
               )}
-              <span className="text-gray-500 dark:text-gray-400">
-                {post.isAnonymous ? "@anonymous" : `@${post.author?.name.toLowerCase().replace(/\s/g, '')}`}
-              </span>
             </div>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {post.isAnonymous ? "@anonymous" : `@${post.author?.name.toLowerCase().replace(/\s/g, '')}`}
+            </span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -250,15 +250,18 @@ const CommentItem = ({ comment }: CommentItemProps) => {
   return (
     <div className="flex gap-3">
       <div className="flex-1">
-        <div className="flex items-center space-x-1 text-sm">
-          <span className="font-bold text-gray-900 dark:text-gray-100">
-            {comment.author?.username}
-          </span>
-          <span className="text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col">
+          <div className="flex items-center space-x-1">
+            <span className="font-bold text-gray-900 dark:text-gray-100">
+              {comment.author?.username}
+            </span>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">
+              {timeAgo}
+            </span>
+          </div>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             @{comment.author?.username.toLowerCase().replace(/\s/g, '')}
           </span>
-          <span className="text-gray-500 dark:text-gray-400">·</span>
-          <span className="text-gray-500 dark:text-gray-400">{timeAgo}</span>
         </div>
         <p className="text-[15px] text-gray-900 dark:text-gray-100 mt-1">{comment.content}</p>
         
