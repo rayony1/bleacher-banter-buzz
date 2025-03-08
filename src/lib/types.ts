@@ -8,6 +8,7 @@ export type User = {
   points: number;
   isAthlete: boolean;
   createdAt: Date;
+  email?: string;
 };
 
 export type Badge = {
