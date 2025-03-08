@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Post, PostCardProps } from '@/lib/types';
 import { useComments } from '@/hooks/useComments';
 import { useAuth } from '@/lib/auth';
+import { checkIfPostLiked, getLikesCount } from '@/lib/supabase';
 
 import PostHeader from './PostHeader';
 import PostContent from './PostContent';
@@ -12,6 +13,7 @@ import CommentsSection from './CommentsSection';
 
 const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostCardProps) => {
   const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const { user } = useAuth();
@@ -23,6 +25,25 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
     isCreatingComment 
   } = useComments(post.id);
   
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data } = await checkIfPostLiked(post.id, user.id);
+        setLiked(!!data);
+        
+        // Get the likes count
+        const { count } = await getLikesCount(post.id);
+        if (count !== null) setLikesCount(count);
+      } catch (err) {
+        console.error('Error checking like status:', err);
+      }
+    };
+    
+    checkLikeStatus();
+  }, [post.id, user]);
+  
   const handleLike = () => {
     if (disableInteractions) return;
     
@@ -31,7 +52,6 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
     } else {
       onLike(post.id);
     }
-    setLiked(!liked);
   };
   
   const handleSubmitComment = (e: React.FormEvent) => {
@@ -61,11 +81,12 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
         
         <PostInteractions 
           comments={post.comments || 0}
-          likes={post.likes || 0}
+          likes={likesCount}
           liked={liked}
           disableInteractions={disableInteractions}
           onCommentClick={() => setShowComments(!showComments)}
           onLikeClick={handleLike}
+          postId={post.id}
         />
         
         {showComments && (

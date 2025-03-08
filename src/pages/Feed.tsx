@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { Settings, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PostCard from '@/components/feed/PostCard';
 import FeedTabs from '@/components/feed/FeedTabs';
+import CreatePostForm from '@/components/feed/CreatePostForm';
 import { useFeed } from '@/hooks/useFeed';
 import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -14,13 +16,16 @@ import { Post, FeedType } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
-import { Plus } from 'lucide-react';
+import { createPost } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
 
 const Feed = () => {
   const { isMobile } = useMobile();
   const navigate = useNavigate();
   const { user, isLoading: isUserLoading } = useAuth();
   const [filter, setFilter] = useState<FeedType>('school');
+  const [createPostOpen, setCreatePostOpen] = useState(false);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -36,9 +41,38 @@ const Feed = () => {
     unlikePost,
   } = useFeed(filter);
   
-  const handleCreatePostClick = () => {
-    console.log('Create post button clicked');
-    // This would typically open a modal or navigate to a create post page
+  const handleCreatePost = async (content: string, imageUrl?: string) => {
+    if (!user) {
+      toast({
+        title: "Not authorized",
+        description: "You must be logged in to create a post",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsCreatingPost(true);
+      
+      // If using mock data, pass to the hook
+      // In a real app, we would insert to the database
+      await createPost(content, user.school, user.id, false, imageUrl ? [imageUrl] : undefined);
+      
+      setCreatePostOpen(false);
+      toast({
+        title: "Post created!",
+        description: "Your post has been published"
+      });
+    } catch (err) {
+      console.error('Error creating post:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create your post",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingPost(false);
+    }
   };
   
   if (isUserLoading || (isLoading && !posts)) {
@@ -149,7 +183,7 @@ const Feed = () => {
             <div className="p-6 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 rounded-xl shadow-sm m-4">
               <p className="mb-4">No posts in this feed yet</p>
               <Button 
-                onClick={handleCreatePostClick}
+                onClick={() => setCreatePostOpen(true)}
                 className="rounded-full px-4 py-2 bg-[#2DD4BF] hover:bg-[#26B8A5] text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -161,12 +195,24 @@ const Feed = () => {
       </main>
       
       <Button
-        onClick={handleCreatePostClick}
+        onClick={() => setCreatePostOpen(true)}
         className="fixed bottom-20 right-4 md:right-6 rounded-full shadow-lg w-14 h-14 p-0 z-10 bg-[#2DD4BF] hover:bg-[#26B8A5] text-white"
         aria-label="Create new post"
       >
         <Plus className="h-6 w-6" />
       </Button>
+      
+      <Dialog open={createPostOpen} onOpenChange={setCreatePostOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Create a post</DialogTitle>
+          </DialogHeader>
+          <CreatePostForm 
+            onSubmit={handleCreatePost} 
+            isSubmitting={isCreatingPost} 
+          />
+        </DialogContent>
+      </Dialog>
       
       {isMobile && <BottomNav />}
       {!isMobile && <Footer />}
