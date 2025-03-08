@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import GameAdapter from '@/components/scoreboard/GameAdapter';
 import ScoreboardTabs, { GameFilter } from '@/components/scoreboard/ScoreboardTabs';
-import LocationFilter, { LocationFilter } from '@/components/scoreboard/LocationFilter';
+import LocationFilter, { LocationFilter as LocationFilterType } from '@/components/scoreboard/LocationFilter';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useGames } from '@/hooks/useGames';
 import { useMobile } from '@/hooks/use-mobile';
@@ -13,27 +12,23 @@ import { Game } from '@/lib/types';
 const Scoreboard = () => {
   const { games, isLoading, error, userSchoolId } = useGames();
   const [statusFilter, setStatusFilter] = useState<GameFilter>('all');
-  const [locationFilter, setLocationFilter] = useState<LocationFilter>('school');
+  const [locationFilter, setLocationFilter] = useState<LocationFilterType>('school');
   const { isMobile } = useMobile();
 
   const filteredGames = !games ? [] : games.filter(game => {
-    // Filter by game status
     if (statusFilter !== 'all' && game.status !== statusFilter) {
       return false;
     }
     
-    // Filter by location (school, district, state)
     if (locationFilter === 'school') {
       return game.isHomeSchool || game.isAwaySchool;
     } else if (locationFilter === 'district') {
       return game.isDistrict;
     }
     
-    // For state, show all games (no additional filtering)
     return true;
   });
 
-  // Group games by date
   const groupedGames = filteredGames.reduce<Record<string, Game[]>>((acc, game) => {
     const date = new Date(game.startTime).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -48,7 +43,6 @@ const Scoreboard = () => {
     return acc;
   }, {});
 
-  // Sort dates with today and upcoming dates first, then past dates
   const sortedDates = Object.keys(groupedGames).sort((a, b) => {
     const dateA = new Date(a);
     const dateB = new Date(b);
