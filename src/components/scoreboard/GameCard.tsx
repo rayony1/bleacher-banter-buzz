@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Game } from '@/lib/types';
@@ -19,7 +19,7 @@ const GameCard = ({ game }: GameCardProps) => {
   };
 
   return (
-    <Card className="overflow-hidden border-gray-200 dark:border-gray-800 shadow-sm hover:shadow transition-all">
+    <Card className="overflow-hidden hover:shadow-md transition-all duration-300 border-gray-200 dark:border-gray-800 hover:scale-[1.01]">
       <CardContent className="p-0">
         <div className="p-4">
           {/* Game Status Section */}
@@ -49,7 +49,7 @@ const GameCard = ({ game }: GameCardProps) => {
           {/* Teams and Score Section */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col items-center text-center w-2/5">
-              <div className="w-12 h-12 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center overflow-hidden border-2 border-[#2DD4BF]/20">
                 {game.homeTeam.logo ? (
                   <img 
                     src={game.homeTeam.logo} 
@@ -60,7 +60,7 @@ const GameCard = ({ game }: GameCardProps) => {
                   <div className="text-xs font-bold">{game.homeTeam.name.substring(0, 2).toUpperCase()}</div>
                 )}
               </div>
-              <h3 className="font-medium text-sm md:text-base truncate max-w-full">
+              <h3 className="font-semibold text-sm md:text-base truncate max-w-full">
                 {game.homeTeam.name}
               </h3>
               {game.isHomeSchool && (
@@ -74,14 +74,14 @@ const GameCard = ({ game }: GameCardProps) => {
                   {game.homeScore} - {game.awayScore}
                 </div>
               ) : (
-                <div className="text-sm font-medium bg-muted px-3 py-1 rounded">
+                <div className="text-sm font-medium px-3 py-1 rounded text-[#2DD4BF] border border-[#2DD4BF]/20">
                   Upcoming
                 </div>
               )}
             </div>
             
             <div className="flex flex-col items-center text-center w-2/5">
-              <div className="w-12 h-12 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center overflow-hidden border-2 border-[#2DD4BF]/20">
                 {game.awayTeam.logo ? (
                   <img 
                     src={game.awayTeam.logo} 
@@ -92,7 +92,7 @@ const GameCard = ({ game }: GameCardProps) => {
                   <div className="text-xs font-bold">{game.awayTeam.name.substring(0, 2).toUpperCase()}</div>
                 )}
               </div>
-              <h3 className="font-medium text-sm md:text-base truncate max-w-full">
+              <h3 className="font-semibold text-sm md:text-base truncate max-w-full">
                 {game.awayTeam.name}
               </h3>
               {game.isAwaySchool && (
@@ -106,7 +106,7 @@ const GameCard = ({ game }: GameCardProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-xs"
+              className="flex items-center gap-1 text-xs hover:text-[#2DD4BF] hover:bg-[#2DD4BF]/5"
               onClick={toggleDetails}
             >
               {showDetails ? (
@@ -127,7 +127,7 @@ const GameCard = ({ game }: GameCardProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs"
+                  className="text-xs hover:bg-[#2DD4BF]/10 hover:text-[#2DD4BF] hover:border-[#2DD4BF]"
                 >
                   Make Prediction
                 </Button>

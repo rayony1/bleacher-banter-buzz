@@ -1,14 +1,14 @@
+
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import GameCard from '@/components/scoreboard/GameCard';
 import GameAdapter from '@/components/scoreboard/GameAdapter';
+import ScoreboardTabs, { GameFilter } from '@/components/scoreboard/ScoreboardTabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useGames } from '@/hooks/useGames';
 import { useMobile } from '@/hooks/use-mobile';
 import { Game } from '@/lib/types';
-
-type GameFilter = 'all' | 'upcoming' | 'live' | 'final';
 
 const Scoreboard = () => {
   const { games, isLoading, error } = useGames();
@@ -22,7 +22,6 @@ const Scoreboard = () => {
 
   // Group games by date
   const groupedGames = filteredGames.reduce<Record<string, Game[]>>((acc, game) => {
-    // Use startTime, not start_time
     const date = new Date(game.startTime).toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
@@ -49,150 +48,78 @@ const Scoreboard = () => {
     return dateA.getTime() - dateB.getTime();
   });
 
+  const renderGames = () => {
+    if (isLoading) {
+      return (
+        <div className="text-center py-10">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#2DD4BF] border-r-transparent align-[-0.125em]" role="status">
+            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+          </div>
+          <p className="mt-2 text-muted-foreground">Loading games...</p>
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="text-center py-10">
+          <p className="text-red-500">Error loading games</p>
+        </div>
+      );
+    }
+    
+    if (filteredGames.length === 0) {
+      return (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">No games to display</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-8">
+        {sortedDates.map(date => (
+          <div key={date}>
+            <h2 className="font-semibold text-lg mb-3 text-foreground">{date}</h2>
+            <div className="space-y-4">
+              {groupedGames[date].map(game => (
+                <GameAdapter 
+                  key={game.id}
+                  game={game}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
       <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'} px-4`}>
         <div className="container mx-auto max-w-4xl">
-          <h1 className="text-2xl font-bold mb-6">Scoreboard</h1>
+          <h1 className="text-2xl font-bold mb-6 text-foreground">Scoreboard</h1>
           
-          <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as GameFilter)}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="all">All Games</TabsTrigger>
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-              <TabsTrigger value="live">Live</TabsTrigger>
-              <TabsTrigger value="final">Final</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="all" value={filter} onValueChange={(value) => setFilter(value as GameFilter)}>
+            <ScoreboardTabs activeTab={filter} onTabChange={setFilter} />
             
-            <TabsContent value="all" className="animate-fade-in">
-              {isLoading ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">Loading games...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-10">
-                  <p className="text-red-500">Error loading games</p>
-                </div>
-              ) : filteredGames.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">No games to display</p>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {sortedDates.map(date => (
-                    <div key={date}>
-                      <h2 className="font-semibold text-lg mb-3">{date}</h2>
-                      <div className="space-y-4">
-                        {groupedGames[date].map(game => (
-                          <GameAdapter 
-                            key={game.id}
-                            game={game}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <TabsContent value="all" className="animate-fade-in pt-2">
+              {renderGames()}
             </TabsContent>
             
-            {/* The other tab contents (upcoming, live, final) are identical to "all" 
-                but with the filtered games specific to that status */}
-            <TabsContent value="upcoming" className="animate-fade-in">
-              {isLoading ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">Loading games...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-10">
-                  <p className="text-red-500">Error loading games</p>
-                </div>
-              ) : filteredGames.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">No games to display</p>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {sortedDates.map(date => (
-                    <div key={date}>
-                      <h2 className="font-semibold text-lg mb-3">{date}</h2>
-                      <div className="space-y-4">
-                        {groupedGames[date].map(game => (
-                          <GameAdapter 
-                            key={game.id}
-                            game={game}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <TabsContent value="upcoming" className="animate-fade-in pt-2">
+              {renderGames()}
             </TabsContent>
             
-            <TabsContent value="live" className="animate-fade-in">
-              {isLoading ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">Loading games...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-10">
-                  <p className="text-red-500">Error loading games</p>
-                </div>
-              ) : filteredGames.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">No games to display</p>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {sortedDates.map(date => (
-                    <div key={date}>
-                      <h2 className="font-semibold text-lg mb-3">{date}</h2>
-                      <div className="space-y-4">
-                        {groupedGames[date].map(game => (
-                          <GameAdapter 
-                            key={game.id}
-                            game={game}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <TabsContent value="live" className="animate-fade-in pt-2">
+              {renderGames()}
             </TabsContent>
             
-            <TabsContent value="final" className="animate-fade-in">
-              {isLoading ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">Loading games...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-10">
-                  <p className="text-red-500">Error loading games</p>
-                </div>
-              ) : filteredGames.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">No games to display</p>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {sortedDates.map(date => (
-                    <div key={date}>
-                      <h2 className="font-semibold text-lg mb-3">{date}</h2>
-                      <div className="space-y-4">
-                        {groupedGames[date].map(game => (
-                          <GameAdapter 
-                            key={game.id}
-                            game={game}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <TabsContent value="final" className="animate-fade-in pt-2">
+              {renderGames()}
             </TabsContent>
           </Tabs>
         </div>

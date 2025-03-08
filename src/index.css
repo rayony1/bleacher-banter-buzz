@@ -98,7 +98,6 @@
     overscroll-behavior: none;
   }
 
-  /* Custom safe area insets for mobile devices */
   @supports (padding: env(safe-area-inset-top)) {
     body {
       padding-top: env(safe-area-inset-top);
@@ -109,7 +108,6 @@
   }
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -127,7 +125,6 @@
   @apply bg-primary/50;
 }
 
-/* Mobile-optimized card hover effects */
 .card-hover {
   @apply transition-shadow duration-200;
 }
@@ -136,7 +133,6 @@
   @apply shadow-md;
 }
 
-/* Touch feedback for buttons */
 .btn-hover {
   position: relative;
   overflow: hidden;
@@ -163,7 +159,6 @@
   }
 }
 
-/* Mobile app style bottom navigation */
 .bottom-nav {
   @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border flex justify-around items-center py-2 px-1 z-40;
 }
@@ -180,12 +175,10 @@
   @apply text-xs mt-1 font-medium;
 }
 
-/* Mobile app styled header */
 .mobile-header {
   @apply sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border/50;
 }
 
-/* Page transitions */
 .page-transition-enter {
   opacity: 0;
   transform: translateY(8px);
@@ -208,17 +201,14 @@
   transition: opacity 0.3s, transform 0.3s;
 }
 
-/* Mobile pulldown to refresh */
 .pull-to-refresh {
   @apply flex items-center justify-center py-3 text-sm text-muted-foreground;
 }
 
-/* Mobile bottom sheet */
 .mobile-sheet {
   @apply fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-xl shadow-lg transform transition-transform duration-300;
 }
 
-/* Card Hover Animation */
 .hover-card {
   @apply transition-all duration-300 ease-in-out;
 }
@@ -227,12 +217,10 @@
   @apply shadow-md transform scale-[1.01];
 }
 
-/* Hashtag Styles */
 .hashtag {
   @apply text-primary hover:underline cursor-pointer;
 }
 
-/* Button Hover Animation */
 .animated-button {
   @apply relative overflow-hidden transition-all;
 }
@@ -255,4 +243,32 @@
   transform: scale(2);
   opacity: 0;
   transition: 0s;
+}
+
+.score-card {
+  @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] border border-gray-200 dark:border-gray-700;
+}
+
+.team-avatar {
+  @apply w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center overflow-hidden border-2 border-primary/20;
+}
+
+.score-display {
+  @apply text-2xl md:text-3xl font-bold;
+}
+
+.status-badge {
+  @apply px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-badge.live {
+  @apply bg-red-500/10 text-red-500 border border-red-500/20;
+}
+
+.status-badge.final {
+  @apply bg-green-500/10 text-green-500 border border-green-500/20;
+}
+
+.status-badge.upcoming {
+  @apply bg-blue-500/10 text-blue-500 border border-blue-500/20;
 }
