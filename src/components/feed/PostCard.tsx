@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, BarChart2, Share, MoreHorizontal, Send, Bookmark } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,15 +72,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
       <div className="p-4">
         {/* Post header with user info and timestamp */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {!post.isAnonymous && (
-              <Avatar className="h-6 w-6 border border-[#2DD4BF]">
-                <AvatarImage src={post.author?.avatar} />
-                <AvatarFallback className="bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                  {post.author?.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            )}
+          <div className="flex flex-col">
             <div className="flex items-center space-x-1 text-sm">
               <span className="font-bold text-gray-900 dark:text-gray-100">
                 {post.isAnonymous ? "Bleacher Banter" : post.author?.name}
@@ -210,12 +201,6 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostC
           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
             {user && (
               <form onSubmit={handleSubmitComment} className="flex gap-2 mb-4">
-                <Avatar className="h-8 w-8 flex-shrink-0 border border-[#2DD4BF]">
-                  <AvatarImage src={user.avatar} />
-                  <AvatarFallback className="bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                    {user.username?.substring(0, 2).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
                 <div className="flex-1 flex items-end gap-2">
                   <Textarea
                     value={commentText}
@@ -264,12 +249,6 @@ const CommentItem = ({ comment }: CommentItemProps) => {
   
   return (
     <div className="flex gap-3">
-      <Avatar className="h-6 w-6 flex-shrink-0 mt-1 border border-[#2DD4BF]">
-        <AvatarImage src={comment.author?.avatar} />
-        <AvatarFallback className="bg-[#2DD4BF]/10 text-[#2DD4BF]">
-          {comment.author?.username.substring(0, 2).toUpperCase() || 'U'}
-        </AvatarFallback>
-      </Avatar>
       <div className="flex-1">
         <div className="flex items-center space-x-1 text-sm">
           <span className="font-bold text-gray-900 dark:text-gray-100">

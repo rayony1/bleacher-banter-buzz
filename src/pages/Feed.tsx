@@ -12,7 +12,6 @@ import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
 import { Post, FeedType } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
 import { Plus } from 'lucide-react';
@@ -47,17 +46,6 @@ const Feed = () => {
       <div className="flex flex-col min-h-screen bg-[#F5F5F5] dark:bg-black">
         <div className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
           <div className="max-w-[600px] mx-auto px-4 py-3 flex justify-between items-center">
-            {user ? (
-              <Avatar className="h-8 w-8 border-2 border-[#2DD4BF]">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback className="bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                  {user.username?.substring(0, 2).toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <div className="h-8 w-8"></div>
-            )}
-            
             <div className="text-xl font-bold">Bleacher Banter</div>
             
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -103,17 +91,6 @@ const Feed = () => {
       <div className="flex flex-col min-h-screen bg-[#F5F5F5] dark:bg-black">
         <div className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
           <div className="max-w-[600px] mx-auto px-4 py-3 flex justify-between items-center">
-            {user ? (
-              <Avatar className="h-8 w-8 border-2 border-[#2DD4BF]">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback className="bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                  {user.username?.substring(0, 2).toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <div className="h-8 w-8"></div>
-            )}
-            
             <div className="text-xl font-bold">Bleacher Banter</div>
             
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -144,17 +121,6 @@ const Feed = () => {
     <div className="flex flex-col min-h-screen bg-[#F5F5F5] dark:bg-black">
       <div className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-[600px] mx-auto px-4 py-3 flex justify-between items-center">
-          {user ? (
-            <Avatar className="h-8 w-8 border-2 border-[#2DD4BF]">
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback className="bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                {user.username?.substring(0, 2).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div className="h-8 w-8"></div>
-          )}
-          
           <div className="text-xl font-bold">Bleacher Banter</div>
           
           <Button variant="ghost" size="icon" className="rounded-full">
