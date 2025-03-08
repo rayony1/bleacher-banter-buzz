@@ -2,22 +2,35 @@
 import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import GameCard from '@/components/scoreboard/GameCard';
 import GameAdapter from '@/components/scoreboard/GameAdapter';
 import ScoreboardTabs, { GameFilter } from '@/components/scoreboard/ScoreboardTabs';
+import LocationFilter, { LocationFilter } from '@/components/scoreboard/LocationFilter';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useGames } from '@/hooks/useGames';
 import { useMobile } from '@/hooks/use-mobile';
 import { Game } from '@/lib/types';
 
 const Scoreboard = () => {
-  const { games, isLoading, error } = useGames();
-  const [filter, setFilter] = useState<GameFilter>('all');
+  const { games, isLoading, error, userSchoolId } = useGames();
+  const [statusFilter, setStatusFilter] = useState<GameFilter>('all');
+  const [locationFilter, setLocationFilter] = useState<LocationFilter>('school');
   const { isMobile } = useMobile();
 
   const filteredGames = !games ? [] : games.filter(game => {
-    if (filter === 'all') return true;
-    return game.status === filter;
+    // Filter by game status
+    if (statusFilter !== 'all' && game.status !== statusFilter) {
+      return false;
+    }
+    
+    // Filter by location (school, district, state)
+    if (locationFilter === 'school') {
+      return game.isHomeSchool || game.isAwaySchool;
+    } else if (locationFilter === 'district') {
+      return game.isDistrict;
+    }
+    
+    // For state, show all games (no additional filtering)
+    return true;
   });
 
   // Group games by date
@@ -103,8 +116,10 @@ const Scoreboard = () => {
         <div className="container mx-auto max-w-4xl">
           <h1 className="text-2xl font-bold mb-6 text-foreground">Scoreboard</h1>
           
-          <Tabs defaultValue="all" value={filter} onValueChange={(value) => setFilter(value as GameFilter)}>
-            <ScoreboardTabs activeTab={filter} onTabChange={setFilter} />
+          <LocationFilter activeFilter={locationFilter} onFilterChange={setLocationFilter} />
+          
+          <Tabs defaultValue="all" value={statusFilter} onValueChange={(value) => setStatusFilter(value as GameFilter)}>
+            <ScoreboardTabs activeTab={statusFilter} onTabChange={setStatusFilter} />
             
             <TabsContent value="all" className="animate-fade-in pt-2">
               {renderGames()}
