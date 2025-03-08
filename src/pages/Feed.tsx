@@ -8,7 +8,6 @@ import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import PostCard from '@/components/feed/PostCard';
 import FeedTabs from '@/components/feed/FeedTabs';
-import EmailConfirmationBanner from '@/components/auth/EmailConfirmationBanner';
 import CreatePostButton from '@/components/feed/CreatePostButton';
 import { useFeed } from '@/hooks/useFeed';
 import { useMobile } from '@/hooks/use-mobile';
@@ -20,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const Feed = () => {
   const { isMobile } = useMobile();
   const navigate = useNavigate();
-  const { user, isLoading: isUserLoading, isEmailConfirmed } = useAuth();
+  const { user, isLoading: isUserLoading } = useAuth();
   const [filter, setFilter] = useState<FeedType>('school');
   
   useEffect(() => {
@@ -168,10 +167,6 @@ const Feed = () => {
       
       <main className="flex-1">
         <div className="max-w-[600px] mx-auto">
-          {user && !isEmailConfirmed && (
-            <EmailConfirmationBanner userEmail={user.email} compact={true} />
-          )}
-          
           <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
           
           {posts && posts.length > 0 ? (
@@ -182,7 +177,7 @@ const Feed = () => {
                   post={post} 
                   onLike={likePost} 
                   onUnlike={unlikePost}
-                  disableInteractions={!isEmailConfirmed}
+                  disableInteractions={false}
                 />
               ))}
             </div>
@@ -192,7 +187,6 @@ const Feed = () => {
               <Button 
                 onClick={handleCreatePostClick}
                 className="rounded-full px-4 py-2 bg-[#2DD4BF] hover:bg-[#26B8A5] text-white"
-                disabled={!isEmailConfirmed}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create post
@@ -206,7 +200,6 @@ const Feed = () => {
         onClick={handleCreatePostClick}
         className="fixed bottom-20 right-4 md:right-6 rounded-full shadow-lg w-14 h-14 p-0 z-10 bg-[#2DD4BF] hover:bg-[#26B8A5] text-white"
         aria-label="Create new post"
-        disabled={!isEmailConfirmed}
       >
         <Plus className="h-6 w-6" />
       </Button>

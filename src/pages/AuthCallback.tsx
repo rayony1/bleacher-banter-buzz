@@ -31,7 +31,7 @@ const AuthCallback = () => {
           
           console.log(`Processing ${type} verification with token`);
           
-          // Handle email verification
+          // Handle verification
           let verifyResult;
           
           if (type === 'recovery' || type === 'invite' || type === 'email_change') {
@@ -60,8 +60,8 @@ const AuthCallback = () => {
             });
           } else {
             toast({
-              title: "Verification successful",
-              description: "Your identity has been verified successfully.",
+              title: "Login successful",
+              description: "You have been logged in successfully.",
             });
             
             // Redirect to feed page after successful verification
