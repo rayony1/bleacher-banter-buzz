@@ -23,19 +23,19 @@ const FeedTabs = ({
       <TabsList className="flex w-full h-12 bg-transparent p-0 space-x-1 border-b border-gray-200 dark:border-gray-800">
         <TabsTrigger 
           value="school" 
-          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
+          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-[#2DD4BF] data-[state=active]:border-b-2 data-[state=active]:border-[#2DD4BF] data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
         >
           My School
         </TabsTrigger>
         <TabsTrigger 
           value="district" 
-          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
+          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-[#2DD4BF] data-[state=active]:border-b-2 data-[state=active]:border-[#2DD4BF] data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
         >
           District
         </TabsTrigger>
         <TabsTrigger 
           value="state" 
-          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
+          className="flex-1 h-12 rounded-none bg-transparent font-bold text-base data-[state=active]:text-[#2DD4BF] data-[state=active]:border-b-2 data-[state=active]:border-[#2DD4BF] data-[state=active]:shadow-none data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400"
         >
           State
         </TabsTrigger>
