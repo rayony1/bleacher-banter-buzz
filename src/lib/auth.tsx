@@ -10,6 +10,7 @@ interface AuthContextType {
   error: Error | null;
   signOut: () => Promise<void>;
   isEmailConfirmed: boolean;
+  userEmail: string | undefined;
   sendMagicLink: (email: string) => Promise<{ error: Error | null }>;
   isMagicLink: boolean;
 }
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
   signOut: async () => {},
   isEmailConfirmed: false,
+  userEmail: undefined,
   sendMagicLink: async () => ({ error: null }),
   isMagicLink: false,
 });
@@ -41,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [isEmailConfirmed, setIsEmailConfirmed] = useState<boolean>(false);
+  const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [isMagicLink, setIsMagicLink] = useState<boolean>(false);
 
   useEffect(() => {
@@ -49,14 +52,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         // Handle sign in event
         if (session?.user) {
-          if (event === 'SIGNED_IN' && session.user.email_confirmed_at) {
+          // Store the user's email even if not confirmed
+          setUserEmail(session.user.email);
+          
+          // Check if email is confirmed
+          if (session.user.email_confirmed_at) {
             setIsEmailConfirmed(true);
+            // Clear any pending confirmation email from localStorage
+            localStorage.removeItem('pendingConfirmationEmail');
+          } else {
+            setIsEmailConfirmed(false);
+            // Store email for confirmation in localStorage if not already there
+            if (session.user.email) {
+              localStorage.setItem('pendingConfirmationEmail', session.user.email);
+            }
           }
           fetchUserProfile(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsEmailConfirmed(false);
+        setUserEmail(undefined);
       }
     });
 
@@ -66,8 +82,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
+        // Store the user's email even if not confirmed
+        setUserEmail(session.user.email);
+        
+        // Check if email is confirmed
         if (session.user.email_confirmed_at) {
           setIsEmailConfirmed(true);
+          // Clear any pending confirmation email from localStorage
+          localStorage.removeItem('pendingConfirmationEmail');
+        } else {
+          setIsEmailConfirmed(false);
+          // Store email for confirmation in localStorage if not already there
+          if (session.user.email) {
+            localStorage.setItem('pendingConfirmationEmail', session.user.email);
+          }
         }
         fetchUserProfile(session.user.id);
       } else {
@@ -189,6 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       error, 
       signOut, 
       isEmailConfirmed,
+      userEmail,
       sendMagicLink,
       isMagicLink
     }}>

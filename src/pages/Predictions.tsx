@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Trophy, Clock } from 'lucide-react';
@@ -10,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
+import EmailConfirmationBanner from '@/components/auth/EmailConfirmationBanner';
 import PredictionCard from '@/components/predictions/PredictionCard';
 import PastPredictionCard from '@/components/predictions/PastPredictionCard';
 import LeaderboardCard from '@/components/predictions/LeaderboardCard';
@@ -21,9 +21,8 @@ import { Game } from '@/lib/types';
 const Predictions = () => {
   const { isMobile } = useMobile();
   const navigate = useNavigate();
-  const { user, isLoading: isUserLoading, isEmailConfirmed } = useAuth();
+  const { user, isLoading: isUserLoading, isEmailConfirmed, userEmail } = useAuth();
   
-  // Redirect if not logged in
   useEffect(() => {
     if (!isUserLoading && !user) {
       navigate('/auth');
@@ -37,7 +36,6 @@ const Predictions = () => {
     error,
   } = useGames();
   
-  // Loading state
   if (isUserLoading || isLoading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -67,29 +65,10 @@ const Predictions = () => {
       <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'} px-4`}>
         <div className="container mx-auto max-w-4xl">
         
-          {/* Email confirmation warning - REDESIGNED FOR COMPACT SIZE */}
           {user && !isEmailConfirmed && (
-            <Alert className="mb-4 py-2 bg-amber-50/80 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-500" />
-              <div className="flex justify-between items-center w-full">
-                <div className="flex-1">
-                  <AlertTitle className="text-sm font-medium text-amber-800 dark:text-amber-400">Email not confirmed</AlertTitle>
-                  <AlertDescription className="text-xs text-amber-700 dark:text-amber-300">
-                    Confirm your email to make predictions
-                  </AlertDescription>
-                </div>
-                <Button 
-                  variant="link" 
-                  className="text-xs text-amber-600 dark:text-amber-400 p-0 h-auto font-medium"
-                  onClick={() => navigate('/auth')}
-                >
-                  Resend email
-                </Button>
-              </div>
-            </Alert>
+            <EmailConfirmationBanner userEmail={userEmail} compact={true} />
           )}
           
-          {/* Page Header with Points - REDESIGNED FOR BETTER LAYOUT */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
             <h1 className="text-xl font-bold">Predictions</h1>
             

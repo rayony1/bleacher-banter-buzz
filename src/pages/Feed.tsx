@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThumbsUp, MessageSquare, AlertTriangle, Plus, Settings } from 'lucide-react';
@@ -9,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import PostCard from '@/components/feed/PostCard';
 import FeedTabs from '@/components/feed/FeedTabs';
+import EmailConfirmationBanner from '@/components/auth/EmailConfirmationBanner';
 import CreatePostButton from '@/components/feed/CreatePostButton';
 import { useFeed } from '@/hooks/useFeed';
 import { useMobile } from '@/hooks/use-mobile';
@@ -23,7 +23,6 @@ const Feed = () => {
   const { user, isLoading: isUserLoading, isEmailConfirmed } = useAuth();
   const [filter, setFilter] = useState<FeedType>('school');
   
-  // Redirect if not logged in
   useEffect(() => {
     if (!isUserLoading && !user) {
       navigate('/auth');
@@ -102,7 +101,6 @@ const Feed = () => {
     );
   }
   
-  // Show error
   if (error) {
     return (
       <div className="flex flex-col min-h-screen bg-[#F5F5F5] dark:bg-black">
@@ -170,20 +168,8 @@ const Feed = () => {
       
       <main className="flex-1">
         <div className="max-w-[600px] mx-auto">
-          {/* Email confirmation warning */}
           {user && !isEmailConfirmed && (
-            <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-100 dark:border-blue-800">
-              <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
-                <span>Your email address is not confirmed.</span>
-                <Button 
-                  variant="link" 
-                  className="text-blue-600 dark:text-blue-400 p-0 h-auto font-medium"
-                  onClick={() => navigate('/auth')}
-                >
-                  Confirm now
-                </Button>
-              </div>
-            </div>
+            <EmailConfirmationBanner userEmail={user.email} compact={true} />
           )}
           
           <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
