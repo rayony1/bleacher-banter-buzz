@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, Trophy } from 'lucide-react';
+import { AlertTriangle, Trophy, Clock } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
@@ -66,41 +67,45 @@ const Predictions = () => {
       <main className={`flex-1 ${isMobile ? 'pt-16 pb-20' : 'pt-24 pb-16'} px-4`}>
         <div className="container mx-auto max-w-4xl">
         
-          {/* Email confirmation warning */}
+          {/* Email confirmation warning - REDESIGNED FOR COMPACT SIZE */}
           {user && !isEmailConfirmed && (
-            <Alert className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
-              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
-              <AlertTitle className="text-amber-800 dark:text-amber-400">Email not confirmed</AlertTitle>
-              <AlertDescription className="text-amber-700 dark:text-amber-300">
-                Your email address is not confirmed. You can browse predictions, but you won't be able to make your own predictions until you confirm your email.
+            <Alert className="mb-4 py-2 bg-amber-50/80 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-500" />
+              <div className="flex justify-between items-center w-full">
+                <div className="flex-1">
+                  <AlertTitle className="text-sm font-medium text-amber-800 dark:text-amber-400">Email not confirmed</AlertTitle>
+                  <AlertDescription className="text-xs text-amber-700 dark:text-amber-300">
+                    Confirm your email to make predictions
+                  </AlertDescription>
+                </div>
                 <Button 
                   variant="link" 
-                  className="text-amber-600 dark:text-amber-400 p-0 h-auto font-semibold"
+                  className="text-xs text-amber-600 dark:text-amber-400 p-0 h-auto font-medium"
                   onClick={() => navigate('/auth')}
                 >
-                  Resend confirmation email
+                  Resend email
                 </Button>
-              </AlertDescription>
+              </div>
             </Alert>
           )}
           
-          {/* Page Header with Points */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h1 className="text-2xl font-bold">Predictions</h1>
+          {/* Page Header with Points - REDESIGNED FOR BETTER LAYOUT */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+            <h1 className="text-xl font-bold">Predictions</h1>
             
             {user && (
-              <Card className="bg-gradient-to-r from-teal-500/90 to-cyan-500/90 text-white p-2 px-4 flex items-center gap-2 shadow-md">
-                <Trophy className="h-5 w-5 text-amber-200" />
+              <Card className="bg-gradient-to-r from-teal-500/90 to-cyan-500/90 text-white py-1.5 px-3 flex items-center gap-2 shadow-md">
+                <Trophy className="h-4 w-4 text-amber-200" />
                 <div className="flex flex-col">
                   <span className="text-xs text-teal-100">Your Points</span>
-                  <span className="font-bold">{user.points || 0} pts</span>
+                  <span className="font-bold text-sm">{user.points || 0} pts</span>
                 </div>
               </Card>
             )}
           </div>
           
           {error && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>
@@ -109,16 +114,16 @@ const Predictions = () => {
             </Alert>
           )}
           
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <span className="bg-teal-500/10 text-teal-700 dark:text-teal-300 px-2 py-1 rounded-md mr-2 text-sm font-normal">
+          <section className="mb-6">
+            <h2 className="text-lg font-semibold mb-3 flex items-center">
+              <Badge variant="outline" className="bg-teal-500/10 text-teal-700 dark:text-teal-300 border-0 mr-2 text-xs">
                 Make Your Picks
-              </span>
+              </Badge>
               Upcoming Games
             </h2>
             
             {upcomingGames && upcomingGames.length > 0 ? (
-              <ScrollArea className="w-full whitespace-nowrap pb-4">
+              <ScrollArea className="w-full whitespace-nowrap pb-3">
                 <div className="flex space-x-4">
                   {upcomingGames.map((game: Game) => (
                     <PredictionCard 
@@ -131,22 +136,25 @@ const Predictions = () => {
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             ) : (
-              <Card className="bg-muted/30 p-6 text-center">
-                <p className="text-muted-foreground">No upcoming games available for predictions</p>
+              <Card className="bg-muted/30 p-5 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <Clock className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">No upcoming games available for predictions</p>
+                </div>
               </Card>
             )}
           </section>
           
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <span className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-md mr-2 text-sm font-normal">
+          <section className="mb-6">
+            <h2 className="text-lg font-semibold mb-3 flex items-center">
+              <Badge variant="outline" className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-0 mr-2 text-xs">
                 Results
-              </span>
+              </Badge>
               Past Predictions
             </h2>
             
             {pastPredictions && pastPredictions.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {pastPredictions.slice(0, 5).map((prediction) => (
                   <PastPredictionCard key={prediction.id} prediction={prediction} />
                 ))}
@@ -160,17 +168,20 @@ const Predictions = () => {
                 )}
               </div>
             ) : (
-              <Card className="bg-muted/30 p-6 text-center">
-                <p className="text-muted-foreground">No past predictions yet</p>
+              <Card className="bg-muted/30 p-5 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <Clock className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">No past predictions yet</p>
+                </div>
               </Card>
             )}
           </section>
           
           <section>
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <span className="bg-amber-500/10 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-md mr-2 text-sm font-normal">
+            <h2 className="text-lg font-semibold mb-3 flex items-center">
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-0 mr-2 text-xs">
                 Rankings
-              </span>
+              </Badge>
               School Leaderboard
             </h2>
             

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Game, TeamPrediction } from '@/lib/types';
-import { Check, Lock, Clock, Trophy } from 'lucide-react';
+import { Check, Lock, Clock, Trophy, MapPin } from 'lucide-react';
 
 interface PredictionCardProps {
   game: Game;
@@ -50,12 +50,12 @@ const PredictionCard = ({ game, disableInteractions = false }: PredictionCardPro
   const isGameSoon = new Date(game.startTime).getTime() - new Date().getTime() < 24 * 60 * 60 * 1000;
 
   return (
-    <Card className="w-80 min-w-80 overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all bg-card">
+    <Card className="w-72 min-w-72 overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all bg-card">
       <CardContent className="p-0">
         {/* Header with Date and Sport Type */}
-        <div className="bg-gradient-to-r from-teal-500/90 to-cyan-500/90 p-3 text-white">
+        <div className="bg-gradient-to-r from-teal-500/90 to-cyan-500/90 p-2 text-white">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
+            <span className="text-xs font-medium">
               {new Date(game.startTime).toLocaleString('en-US', { 
                 month: 'short', 
                 day: 'numeric',
@@ -63,79 +63,79 @@ const PredictionCard = ({ game, disableInteractions = false }: PredictionCardPro
                 minute: '2-digit'
               })}
             </span>
-            <Badge variant="outline" className="bg-white/20 text-white border-0">
+            <Badge variant="outline" className="bg-white/20 text-white border-0 text-xs">
               {game.sportType}
             </Badge>
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-3">
           {/* Location and Special Indicators */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-muted-foreground flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-xs text-muted-foreground flex items-center">
+              <MapPin className="h-3 w-3 mr-1" />
               {game.location}
             </div>
             
             {isGameSoon && (
-              <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200">
+              <Badge variant="secondary" className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200">
                 Starting Soon
               </Badge>
             )}
           </div>
           
-          {/* Teams Section */}
-          <div className="flex items-center justify-between mb-6">
+          {/* Teams Section - IMPROVED SPACING */}
+          <div className="flex items-center justify-between mb-4">
             <div className="flex flex-col items-center text-center w-2/5">
-              <div className="w-14 h-14 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm">
                 {game.homeTeam.logo ? (
                   <img 
                     src={game.homeTeam.logo} 
                     alt={`${game.homeTeam.name} logo`} 
-                    className="w-10 h-10 object-contain"
+                    className="w-9 h-9 object-contain"
                   />
                 ) : (
                   <div className="text-sm font-bold">{game.homeTeam.name.substring(0, 2).toUpperCase()}</div>
                 )}
               </div>
-              <h3 className="font-medium text-sm md:text-base truncate max-w-full">
+              <h3 className="font-medium text-sm truncate max-w-full">
                 {game.homeTeam.name}
               </h3>
             </div>
             
             <div className="text-center flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mb-1">
+              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center mb-1">
                 <span className="text-xs font-medium text-muted-foreground">VS</span>
               </div>
-              <Trophy className="h-4 w-4 text-amber-500" />
+              <Trophy className="h-3 w-3 text-amber-500" />
             </div>
             
             <div className="flex flex-col items-center text-center w-2/5">
-              <div className="w-14 h-14 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm">
                 {game.awayTeam.logo ? (
                   <img 
                     src={game.awayTeam.logo} 
                     alt={`${game.awayTeam.name} logo`} 
-                    className="w-10 h-10 object-contain"
+                    className="w-9 h-9 object-contain"
                   />
                 ) : (
                   <div className="text-sm font-bold">{game.awayTeam.name.substring(0, 2).toUpperCase()}</div>
                 )}
               </div>
-              <h3 className="font-medium text-sm md:text-base truncate max-w-full">
+              <h3 className="font-medium text-sm truncate max-w-full">
                 {game.awayTeam.name}
               </h3>
             </div>
           </div>
           
           {!submitted ? (
-            /* Prediction Form */
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            /* Prediction Form - IMPROVED SPACING AND READABILITY */
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   variant={selectedTeam === game.homeTeam.id ? "default" : "outline"}
-                  className={`w-full ${selectedTeam === game.homeTeam.id ? 'bg-teal-500 hover:bg-teal-600' : ''} transition-colors`}
+                  className={`w-full py-1.5 text-sm ${selectedTeam === game.homeTeam.id ? 'bg-teal-500 hover:bg-teal-600' : ''} transition-colors`}
                   onClick={() => !disableInteractions && setSelectedTeam(game.homeTeam.id)}
                   disabled={disableInteractions}
                 >
@@ -144,7 +144,7 @@ const PredictionCard = ({ game, disableInteractions = false }: PredictionCardPro
                 <Button
                   type="button"
                   variant={selectedTeam === game.awayTeam.id ? "default" : "outline"}
-                  className={`w-full ${selectedTeam === game.awayTeam.id ? 'bg-teal-500 hover:bg-teal-600' : ''} transition-colors`}
+                  className={`w-full py-1.5 text-sm ${selectedTeam === game.awayTeam.id ? 'bg-teal-500 hover:bg-teal-600' : ''} transition-colors`}
                   onClick={() => !disableInteractions && setSelectedTeam(game.awayTeam.id)}
                   disabled={disableInteractions}
                 >
@@ -152,7 +152,7 @@ const PredictionCard = ({ game, disableInteractions = false }: PredictionCardPro
                 </Button>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label htmlFor={`home-score-${game.id}`} className="text-xs text-muted-foreground">
                     {game.homeTeam.name} Score
@@ -164,7 +164,7 @@ const PredictionCard = ({ game, disableInteractions = false }: PredictionCardPro
                     value={homeScore}
                     onChange={handleHomeScoreChange}
                     placeholder="0"
-                    className="mt-1"
+                    className="mt-1 py-1 h-8 text-sm"
                     disabled={disableInteractions}
                   />
                 </div>
@@ -179,7 +179,7 @@ const PredictionCard = ({ game, disableInteractions = false }: PredictionCardPro
                     value={awayScore}
                     onChange={handleAwayScoreChange}
                     placeholder="0"
-                    className="mt-1"
+                    className="mt-1 py-1 h-8 text-sm"
                     disabled={disableInteractions}
                   />
                 </div>
@@ -201,19 +201,19 @@ const PredictionCard = ({ game, disableInteractions = false }: PredictionCardPro
             </div>
           ) : (
             /* Submitted Prediction */
-            <div className="space-y-4">
-              <div className="bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900 rounded-lg p-4 text-center">
+            <div className="space-y-3">
+              <div className="bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900 rounded-lg p-3 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <Check className="h-5 w-5 text-teal-500 mr-2" />
-                  <span className="font-medium text-teal-700 dark:text-teal-300">Prediction Locked</span>
+                  <Check className="h-4 w-4 text-teal-500 mr-2" />
+                  <span className="font-medium text-sm text-teal-700 dark:text-teal-300">Prediction Locked</span>
                 </div>
                 
-                <p className="text-teal-600 dark:text-teal-400 mb-2">
+                <p className="text-sm text-teal-600 dark:text-teal-400 mb-2">
                   You predicted <span className="font-medium">{selectedTeam === game.homeTeam.id ? game.homeTeam.name : game.awayTeam.name}</span> to win
                 </p>
                 
                 {homeScore && awayScore && (
-                  <p className="text-teal-600 dark:text-teal-400">
+                  <p className="text-sm text-teal-600 dark:text-teal-400">
                     Score prediction: <span className="font-medium">{homeScore}-{awayScore}</span>
                   </p>
                 )}
