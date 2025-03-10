@@ -1,135 +1,164 @@
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/lib/auth';
 import { Post } from '@/lib/types';
-import { deletePost as deletePostApi } from '@/lib/supabase/posts';
+import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
+import { createPost as createPostAPI, deletePost as deletePostAPI } from '@/lib/supabase/posts';
+import { likePost as likePostAPI, unlikePost as unlikePostAPI } from '@/lib/supabase/likes';
 
-// Hook for post actions (like, unlike, create, delete)
 export const usePostActions = (
   setPosts: React.Dispatch<React.SetStateAction<Post[]>>
 ) => {
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isCreatingPost, setIsCreatingPost] = useState(false);
-  
-  // Demo mode - handle liking posts
-  const likePost = (postId: string) => {
-    setPosts(currentPosts => 
-      currentPosts.map(post => 
-        post.id === postId 
-          ? { ...post, likes: post.likes + 1, likeCount: post.likeCount + 1 } 
-          : post
-      )
-    );
-    
-    toast({
-      title: 'Post liked!',
-      description: 'Demo mode: Like count updated',
-    });
-  };
-  
-  // Demo mode - handle unliking posts
-  const unlikePost = (postId: string) => {
-    setPosts(currentPosts => 
-      currentPosts.map(post => 
-        post.id === postId 
-          ? { ...post, likes: Math.max(0, post.likes - 1), likeCount: Math.max(0, post.likeCount - 1) } 
-          : post
-      )
-    );
-    
-    toast({
-      title: 'Post unliked',
-      description: 'Demo mode: Like count updated',
-    });
-  };
-  
-  // Demo mode - handle creating posts
-  const createPost = ({ content, isAnonymous, images }: { content: string; isAnonymous: boolean; images: string[] }) => {
-    if (!user && !isAnonymous) return;
-    
-    const newPost: Post = {
-      id: `new-post-${Date.now()}`,
-      content,
-      author: isAnonymous ? null : {
-        id: user?.id || '',
-        username: user?.username || '',
-        name: user?.name || '',
-        avatar: user?.avatar,
-        badges: user?.badges || [],
-      },
-      isAnonymous,
-      schoolName: 'Westview High',
-      likes: 0,
-      comments: 0,
-      timestamp: new Date(),
-      createdAt: new Date(),
-      likeCount: 0,
-      commentCount: 0,
-      images
-    };
-    
-    setPosts(currentPosts => [newPost, ...currentPosts]);
-    
-    toast({
-      title: 'Post created!',
-      description: 'Demo mode: Your post has been added to the feed',
-    });
-  };
 
-  // Handle post deletion
-  const handleDeletePost = async (postId: string) => {
+  // Function to create a new post
+  const createPost = async ({ content, isAnonymous, images }: { content: string; isAnonymous: boolean; images: string[] }) => {
+    if (!user || !user.id || !user.school) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a post",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsCreatingPost(true);
       
-      // For demo posts
-      if (process.env.NODE_ENV === 'development' && !user?.id) {
-        setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
-        toast({
-          title: 'Post deleted',
-          description: 'Demo mode: Your post has been deleted',
-        });
-        return;
-      }
-      
-      // Real deletion using Supabase
-      const { data, error } = await deletePostApi(postId);
+      const { data, error } = await createPostAPI(content, user.school, user.id, isAnonymous, images);
       
       if (error) throw error;
       
-      if (data) {
-        // Remove the post from the local state
-        setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
-        
-        toast({
-          title: 'Post deleted',
-          description: 'Your post has been removed successfully',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: 'You can only delete your own posts',
-          variant: 'destructive',
-        });
-      }
-    } catch (err) {
-      console.error('Error deleting post:', err);
       toast({
-        title: 'Error',
-        description: 'Failed to delete the post',
-        variant: 'destructive',
+        title: "Success",
+        description: "Post created successfully",
+      });
+      
+      // We don't need to update the posts list here as the realtime subscription will handle it
+      
+    } catch (err) {
+      console.error('Error creating post:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create post. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsCreatingPost(false);
     }
   };
 
+  // Function to like a post
+  const likePost = async (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to like a post",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const { error } = await likePostAPI(postId, user.id);
+      
+      if (error) throw error;
+      
+      // Update the UI optimistically
+      setPosts(currentPosts =>
+        currentPosts.map(post =>
+          post.id === postId
+            ? { ...post, likeCount: post.likeCount + 1, liked: true }
+            : post
+        )
+      );
+      
+    } catch (err) {
+      console.error('Error liking post:', err);
+      toast({
+        title: "Error",
+        description: "Failed to like post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to unlike a post
+  const unlikePost = async (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to unlike a post",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const { error } = await unlikePostAPI(postId, user.id);
+      
+      if (error) throw error;
+      
+      // Update the UI optimistically
+      setPosts(currentPosts =>
+        currentPosts.map(post =>
+          post.id === postId
+            ? { ...post, likeCount: Math.max(0, post.likeCount - 1), liked: false }
+            : post
+        )
+      );
+      
+    } catch (err) {
+      console.error('Error unliking post:', err);
+      toast({
+        title: "Error",
+        description: "Failed to unlike post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to delete a post
+  const deletePost = async (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete a post",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const { error } = await deletePostAPI(postId);
+      
+      if (error) throw error;
+      
+      // Remove the post from the UI
+      setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
+      
+      toast({
+        title: "Success",
+        description: "Post deleted successfully",
+      });
+      
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
+    createPost,
     likePost,
     unlikePost,
-    createPost,
-    deletePost: handleDeletePost,
-    isCreatingPost
+    deletePost,
+    isCreatingPost,
   };
 };

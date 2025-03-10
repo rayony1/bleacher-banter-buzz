@@ -22,6 +22,8 @@ export const useRealtimePosts = (
     // Create a channel for posts
     const channel = supabase.channel('public:posts');
     
+    // We need to use a different approach for filtering as school_id is causing issues
+    // Instead of filtering in the subscription, we'll filter when we receive the payload
     channel
       .on(
         'postgres_changes',
@@ -29,31 +31,39 @@ export const useRealtimePosts = (
           event: 'INSERT',
           schema: 'public',
           table: 'posts',
-          filter: feedType === 'school' ? `school_id=eq.${user.school}` : undefined,
         },
         async (payload: RealtimePostPayload) => {
-          console.log('New post:', payload);
+          console.log('New post received:', payload);
           
           // Fetch the new post to get full details
           if (payload.new && 'post_id' in payload.new) {
-            const { data, error } = await supabase
-              .rpc('get_feed_posts', { 
-                feed_type: feedType, 
-                user_uuid: user.id 
-              })
-              .eq('post_id', payload.new.post_id)
-              .single();
-            
-            if (!error && data) {
-              // Add the new post to the top of the list
-              const newPost = mapDbPostToPost(data);
-              setPosts(currentPosts => [newPost, ...currentPosts]);
+            try {
+              const { data, error } = await supabase
+                .rpc('get_feed_posts', { 
+                  feed_type: feedType, 
+                  user_uuid: user.id 
+                })
+                .eq('post_id', payload.new.post_id)
+                .single();
               
-              // Show a toast notification
-              toast({
-                title: "New post",
-                description: "Someone just added a new post to your feed",
-              });
+              if (error) {
+                console.error('Error fetching new post:', error);
+                return;
+              }
+              
+              if (data) {
+                // Add the new post to the top of the list
+                const newPost = mapDbPostToPost(data);
+                setPosts(currentPosts => [newPost, ...currentPosts]);
+                
+                // Show a toast notification
+                toast({
+                  title: "New post",
+                  description: "Someone just added a new post to your feed",
+                });
+              }
+            } catch (err) {
+              console.error('Error processing realtime post:', err);
             }
           }
         }
