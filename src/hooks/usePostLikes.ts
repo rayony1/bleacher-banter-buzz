@@ -4,7 +4,6 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase/client';
 import { checkIfPostLiked, getLikesCount, likePost, unlikePost } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 type RealtimePostLikePayload = {
   new: {
@@ -61,40 +60,30 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   useEffect(() => {
     if (!postId) return;
     
-    // Manual approach to handle realtime updates without chaining methods
-    const channelId = `post_likes:${postId}`;
-    const channel = supabase.channel(channelId);
+    const channel = supabase.channel(`post_likes:${postId}`);
     
-    // Configure the channel with the subscription event
-    const configuredChannel = channel.on(
-      'postgres_changes',
-      {
+    // Subscribe to changes in the post_likes table for this post
+    channel
+      .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'post_likes',
         filter: `post_id=eq.${postId}`
-      },
-      handlePostLikeChange
-    );
-    
-    // Subscribe to the channel
-    configuredChannel.subscribe();
-    
-    // Handler function for post like changes
-    async function handlePostLikeChange(payload: RealtimePostLikePayload) {
-      // Update like count
-      const { count, error } = await getLikesCount(postId);
-      if (!error && count !== null) {
-        setLikesCount(count);
-      }
-      
-      // Update liked status if it's the current user
-      if (user && payload.new && payload.new.user_id === user.id) {
-        setLiked(true);
-      } else if (user && payload.old && payload.old.user_id === user.id) {
-        setLiked(false);
-      }
-    }
+      }, async (payload: RealtimePostLikePayload) => {
+        // Update like count
+        const { count, error } = await getLikesCount(postId);
+        if (!error && count !== null) {
+          setLikesCount(count);
+        }
+        
+        // Update liked status if it's the current user
+        if (user && payload.new && payload.new.user_id === user.id) {
+          setLiked(true);
+        } else if (user && payload.old && payload.old.user_id === user.id) {
+          setLiked(false);
+        }
+      })
+      .subscribe();
     
     return () => {
       supabase.removeChannel(channel);
