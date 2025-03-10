@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase/client';
 import { checkIfPostLiked, getLikesCount, likePost, unlikePost } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 type RealtimePostLikePayload = {
   new: {
@@ -57,10 +59,13 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   useEffect(() => {
     if (!postId) return;
     
-    const channel = supabase
-      .channel(`post_likes:${postId}`)
+    // Define the channel first
+    const channel = supabase.channel(`post_likes:${postId}`);
+    
+    // Then subscribe to postgres changes
+    channel
       .on(
-        'postgres_changes',
+        'postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
