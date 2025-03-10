@@ -62,38 +62,34 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     // Create a channel for this specific post
     const channel = supabase.channel(`post_likes:${postId}`);
     
-    // First, register a system message handler for presence sync
-    const subscription = channel
+    // Subscribe directly with all handlers defined inline to maintain proper chaining
+    channel
       .on('presence', { event: 'sync' }, () => {
         // This is a workaround to enable channel functionality
         // console.log('Presence sync for post likes');
-      });
-      
-    // Then, separately register postgres_changes channel
-    subscription.on(
-      'postgres_changes', 
-      {
-        event: '*',
-        schema: 'public',
-        table: 'post_likes',
-        filter: `post_id=eq.${postId}`
-      }, 
-      async (payload: RealtimePostLikePayload) => {
-        const { count, error } = await getLikesCount(postId);
-        if (!error && count !== null) {
-          setLikesCount(count);
+      })
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'post_likes',
+          filter: `post_id=eq.${postId}`
+        },
+        async (payload: RealtimePostLikePayload) => {
+          const { count, error } = await getLikesCount(postId);
+          if (!error && count !== null) {
+            setLikesCount(count);
+          }
+          
+          if (user && payload.new && payload.new.user_id === user.id) {
+            setLiked(true);
+          } else if (user && payload.old && payload.old.user_id === user.id) {
+            setLiked(false);
+          }
         }
-        
-        if (user && payload.new && payload.new.user_id === user.id) {
-          setLiked(true);
-        } else if (user && payload.old && payload.old.user_id === user.id) {
-          setLiked(false);
-        }
-      }
-    );
-    
-    // Finally, subscribe to the channel
-    subscription.subscribe();
+      )
+      .subscribe();
     
     return () => {
       supabase.removeChannel(channel);
