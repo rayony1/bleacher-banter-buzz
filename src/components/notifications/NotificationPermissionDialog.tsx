@@ -1,65 +1,94 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { Bell } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { isNative } from '@/utils/platform';
 
 interface NotificationPermissionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRequestComplete?: (granted: boolean) => void;
 }
 
-const NotificationPermissionDialog = ({ 
-  open, 
-  onOpenChange 
-}: NotificationPermissionDialogProps) => {
-  const { requestPermission } = usePushNotifications();
-  const [isRequesting, setIsRequesting] = useState(false);
-
-  const handleEnableNotifications = async () => {
+const NotificationPermissionDialog: React.FC<NotificationPermissionDialogProps> = ({
+  open,
+  onOpenChange,
+  onRequestComplete
+}) => {
+  const handleRequestPermission = async () => {
     try {
-      setIsRequesting(true);
-      await requestPermission();
+      if (isNative()) {
+        const result = await PushNotifications.requestPermissions();
+        const granted = result.receive === 'granted';
+        console.log('Push notification permission result:', granted ? 'granted' : 'denied');
+        
+        if (granted) {
+          await PushNotifications.register();
+        }
+        
+        if (onRequestComplete) {
+          onRequestComplete(granted);
+        }
+      } else {
+        console.log('Push notifications not available in web');
+        if (onRequestComplete) {
+          onRequestComplete(false);
+        }
+      }
+      
       onOpenChange(false);
     } catch (error) {
-      console.error('Error requesting notification permission:', error);
-    } finally {
-      setIsRequesting(false);
+      console.error('Error requesting push notification permission:', error);
+      if (onRequestComplete) {
+        onRequestComplete(false);
+      }
+      onOpenChange(false);
     }
   };
 
-  const handleSkip = () => {
+  const handleDecline = () => {
+    console.log('Push notifications declined by user');
+    if (onRequestComplete) {
+      onRequestComplete(false);
+    }
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <div className="mx-auto bg-[#2DD4BF]/10 w-16 h-16 flex items-center justify-center rounded-full mb-4">
-            <Bell className="h-8 w-8 text-[#2DD4BF]" />
+          <div className="mx-auto bg-teal-100 dark:bg-teal-900 p-3 rounded-full mb-3">
+            <Bell className="h-6 w-6 text-teal-600 dark:text-teal-300" />
           </div>
-          <DialogTitle className="text-center">Stay Up-to-Date</DialogTitle>
+          <DialogTitle className="text-center">Stay Updated</DialogTitle>
           <DialogDescription className="text-center">
-            Get notified when someone likes your posts, comments on your content, or when game scores are updated.
+            Get notified when someone likes your posts, replies to your comments, or when there are game updates.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-          <Button
-            variant="outline"
-            onClick={handleSkip}
+        
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+          <Button 
+            variant="outline" 
+            onClick={handleDecline}
             className="w-full sm:w-auto"
-            disabled={isRequesting}
           >
-            Not Now
+            Not now
           </Button>
-          <Button
-            onClick={handleEnableNotifications}
-            className="w-full sm:w-auto bg-[#2DD4BF] hover:bg-[#26B8A5] text-white"
-            disabled={isRequesting}
+          <Button 
+            onClick={handleRequestPermission}
+            className="w-full sm:w-auto bg-[#2DD4BF] hover:bg-[#20B2A0] text-white"
           >
-            {isRequesting ? "Requesting..." : "Enable Notifications"}
+            Enable notifications
           </Button>
         </DialogFooter>
       </DialogContent>

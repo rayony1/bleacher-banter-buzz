@@ -5,9 +5,15 @@ import { useAuth } from '@/lib/auth';
 import { arePushNotificationsAvailable } from '@/utils/pushNotifications';
 import NotificationPermissionDialog from './NotificationPermissionDialog';
 
+interface NotificationPermissionProps {
+  onRequestComplete?: (granted: boolean) => void;
+}
+
 // This component checks if notification permissions should be requested
 // and shows the permission dialog when appropriate
-const NotificationPermission: React.FC = () => {
+const NotificationPermission: React.FC<NotificationPermissionProps> = ({ 
+  onRequestComplete 
+}) => {
   const { user } = useAuth();
   const { hasPermission } = usePushNotifications();
   const [showDialog, setShowDialog] = useState(false);
@@ -49,6 +55,15 @@ const NotificationPermission: React.FC = () => {
     if (!open) {
       // Save preference to avoid showing dialog again
       localStorage.setItem('notification-preference', 'asked');
+      if (onRequestComplete) {
+        onRequestComplete(false); // Declining by closing the dialog
+      }
+    }
+  };
+
+  const handleRequestComplete = (granted: boolean) => {
+    if (onRequestComplete) {
+      onRequestComplete(granted);
     }
   };
 
@@ -58,7 +73,8 @@ const NotificationPermission: React.FC = () => {
   return (
     <NotificationPermissionDialog 
       open={showDialog} 
-      onOpenChange={handleDialogOpenChange} 
+      onOpenChange={handleDialogOpenChange}
+      onRequestComplete={handleRequestComplete}
     />
   );
 };

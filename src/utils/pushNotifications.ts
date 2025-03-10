@@ -1,6 +1,7 @@
 
 import { PushNotifications } from '@capacitor/push-notifications';
 import { isNative } from './platform';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Check if push notifications are available for the current platform
@@ -16,6 +17,71 @@ export const arePushNotificationsAvailable = async (): Promise<boolean> => {
   } catch (error) {
     console.error('Error checking push notification permissions:', error);
     return false;
+  }
+};
+
+/**
+ * Initialize push notifications for a user
+ * @param userId The user ID to register for notifications
+ * @returns A cleanup function to remove listeners
+ */
+export const initializePushNotifications = async (userId: string): Promise<() => void> => {
+  if (!isNative()) {
+    console.log('Push notifications not available on web');
+    return () => {};
+  }
+  
+  try {
+    // Request permission
+    const permResult = await PushNotifications.requestPermissions();
+    if (permResult.receive !== 'granted') {
+      console.log('Push notification permission not granted');
+      return () => {};
+    }
+
+    // Register with native platforms
+    await PushNotifications.register();
+    
+    // Set up listeners
+    const registrationListener = await PushNotifications.addListener('registration', 
+      async (token) => {
+        console.log('Push registration success, token:', token.value);
+        
+        // Store the token in Supabase
+        try {
+          await supabase.from('user_devices').upsert({ 
+            user_id: userId, 
+            device_token: token.value,
+            created_at: new Date().toISOString()
+          });
+          console.log('Device token saved to database');
+        } catch (error) {
+          console.error('Error saving device token:', error);
+        }
+      }
+    );
+    
+    const notificationListener = await PushNotifications.addListener('pushNotificationReceived',
+      (notification) => {
+        console.log('Push notification received:', notification);
+      }
+    );
+    
+    const actionListener = await PushNotifications.addListener('pushNotificationActionPerformed',
+      (notification) => {
+        console.log('Push notification action performed:', notification);
+      }
+    );
+    
+    // Return cleanup function
+    return () => {
+      registrationListener.remove();
+      notificationListener.remove();
+      actionListener.remove();
+    };
+  } catch (error) {
+    console.error('Error initializing push notifications:', error);
+    return () => {};
   }
 };
 
