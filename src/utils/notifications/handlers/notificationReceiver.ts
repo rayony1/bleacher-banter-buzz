@@ -2,8 +2,8 @@
 import { handleDeepLink } from '../deepLinking';
 import { processNotificationData } from '../formatters';
 import { updateBadgeCount } from '../badgeManagement';
+import { batchNotification, processNotificationBatches } from '../grouping';
 import { Capacitor } from '@capacitor/core';
-import { toast } from '@/hooks/use-toast';
 
 /**
  * Handle a received push notification
@@ -31,22 +31,19 @@ export const handleReceivedNotification = (notification: any): void => {
     // If the notification was tapped, handle deep linking
     handleDeepLink(type, targetId);
   } else {
-    // If the notification was received in the foreground, show in-app notification
-    console.log(`In-app notification: ${title} - ${body}`);
+    // If the notification was received in the foreground, batch it
+    console.log(`Batching notification: ${title} - ${body}`);
     
-    // Show toast notification if we're in a web context or foreground
     if (typeof document !== 'undefined') {
-      // We can't directly use the useToast hook here since this is outside React
-      // Instead we'll dispatch a custom event that components can listen for
-      const event = new CustomEvent('app:notification', { 
-        detail: { title, body, type, targetId }
-      });
-      document.dispatchEvent(event);
+      // Add to batch for grouped notifications
+      batchNotification(type, targetId, title, body);
+      
+      // Process notification batches immediately if it's an important notification
+      if (type === 'game') {
+        processNotificationBatches();
+      }
     }
   }
   
-  // Update badge count if on native platform
-  if (Capacitor.isNativePlatform()) {
-    updateBadgeCount(type);
-  }
+  // Update badge count for native platforms is now handled by the batching system
 };

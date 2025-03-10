@@ -49,7 +49,11 @@ const Feed = () => {
     unlikePost,
     refreshPosts,
     deletePost
-  } = useFeed(filter, user?.id || '', user?.school || '');
+  } = useFeed(
+    filter, 
+    user?.id || '', 
+    user?.school || ''
+  );
   
   const { 
     networkStatus, 
