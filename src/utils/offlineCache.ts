@@ -11,7 +11,8 @@ import {
   cacheImage,
   getCachedImage,
   isOnline,
-  initNetworkListener
+  initNetworkListener,
+  retryWithBackoff
 } from './offline';
 
 // Re-export everything for backward compatibility
@@ -24,5 +25,6 @@ export {
   cacheImage,
   getCachedImage,
   isOnline,
-  initNetworkListener
+  initNetworkListener,
+  retryWithBackoff
 };
