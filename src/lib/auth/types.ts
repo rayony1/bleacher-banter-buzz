@@ -9,6 +9,7 @@ export interface AuthContextType {
   userEmail: string | undefined;
   sendMagicLink: (email: string) => Promise<{ error: Error | null }>;
   isMagicLink: boolean;
+  registerWithSchool: (email: string, password: string, username: string, schoolId: string) => Promise<{ error: Error | null }>;
 }
 
 // Demo user for demo mode
@@ -23,4 +24,3 @@ export const DEMO_USER: User = {
   createdAt: new Date(),
   email: 'demo@example.com'
 };
-

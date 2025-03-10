@@ -11,7 +11,7 @@ const AuthContext = createContext<AuthContextType>({
   userEmail: undefined,
   sendMagicLink: async () => ({ error: null }),
   isMagicLink: false,
+  registerWithSchool: async () => ({ error: null }),
 });
 
 export default AuthContext;
-

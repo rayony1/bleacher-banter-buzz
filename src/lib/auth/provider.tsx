@@ -62,11 +62,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: userId,
           username: data.username,
           name: data.username,
-          school: 'Demo School',
+          school: data.school?.school_name || 'Demo School',
           badges: [],
           points: 0,
           isAthlete: false,
           createdAt: new Date(data.created_at),
+          email: data.email
         };
         
         setUser(userProfile);
@@ -143,6 +144,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const registerWithSchool = async (email: string, password: string, username: string, schoolId: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Sign up the user with email and password
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            school_id: schoolId
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+      
+      if (authError) throw authError;
+      
+      if (authData.user) {
+        setUserEmail(email);
+        
+        toast({
+          title: "Registration successful",
+          description: "Please check your email to confirm your account."
+        });
+      }
+      
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to register');
+      setError(error);
+      toast({
+        title: "Registration failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -151,10 +195,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signOut, 
       userEmail,
       sendMagicLink,
-      isMagicLink
+      isMagicLink,
+      registerWithSchool
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
