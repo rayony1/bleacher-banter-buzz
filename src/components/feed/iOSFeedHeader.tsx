@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { ArrowUpFromLine } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-interface iOSFeedHeaderProps {
+interface IOSFeedHeaderProps {
   isRefreshing: boolean;
   onRefresh: () => void;
 }
 
-const iOSFeedHeader = ({ isRefreshing, onRefresh }: iOSFeedHeaderProps) => {
+const IOSFeedHeader = ({ isRefreshing, onRefresh }: IOSFeedHeaderProps) => {
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-lg bg-background/80 border-b">
       <div className="container flex items-center justify-between h-14 max-w-screen-xl mx-auto px-4">
@@ -29,4 +28,4 @@ const iOSFeedHeader = ({ isRefreshing, onRefresh }: iOSFeedHeaderProps) => {
   );
 };
 
-export default iOSFeedHeader;
+export default IOSFeedHeader;

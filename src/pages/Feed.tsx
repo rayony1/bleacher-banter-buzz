@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
@@ -6,7 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { FeedType } from '@/lib/types';
 import { useFeed } from '@/hooks/useFeed';
 import { checkAllPermissions } from '@/utils/iOSPermissions';
-import iOSFeedHeader from '@/components/feed/iOSFeedHeader';
+import IOSFeedHeader from '@/components/feed/iOSFeedHeader';
 import FeedTabs from '@/components/feed/FeedTabs';
 import CreatePostForm from '@/components/feed/CreatePostForm';
 import { useToast, toast } from '@/hooks/use-toast';
@@ -128,7 +127,7 @@ const Feed = () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F5F5] dark:bg-black">
       {isMobile ? (
-        <iOSFeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+        <IOSFeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
       ) : (
         <FeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
       )}
