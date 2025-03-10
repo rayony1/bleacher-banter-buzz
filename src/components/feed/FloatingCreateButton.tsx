@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface FloatingCreateButtonProps {
   onClick: () => void;
@@ -9,13 +8,13 @@ interface FloatingCreateButtonProps {
 
 const FloatingCreateButton = ({ onClick }: FloatingCreateButtonProps) => {
   return (
-    <Button
+    <button
       onClick={onClick}
-      className="fixed bottom-20 right-4 md:right-6 rounded-full shadow-lg w-14 h-14 p-0 z-10 bg-[#2DD4BF] hover:bg-[#26B8A5] text-white"
+      className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-[#2DD4BF] shadow-lg flex items-center justify-center active:scale-95 transition-transform ios:hover:bg-[#2DD4BF]/90"
       aria-label="Create new post"
     >
-      <Plus className="h-6 w-6" />
-    </Button>
+      <Plus className="h-6 w-6 text-white" />
+    </button>
   );
 };
 

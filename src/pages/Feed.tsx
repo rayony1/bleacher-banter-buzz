@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import FeedTabs from '@/components/feed/FeedTabs';
-import CreatePostForm from '@/components/feed/CreatePostForm';
-import { useFeed } from '@/hooks/useFeed';
 import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
 import { FeedType } from '@/lib/types';
-import BottomNav from '@/components/layout/BottomNav';
-import Footer from '@/components/layout/Footer';
-import { createPost } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast';
+import { useFeed } from '@/hooks/useFeed';
+import { checkAllPermissions } from '@/utils/iOSPermissions';
+import iOSFeedHeader from '@/components/feed/iOSFeedHeader';
+import FeedTabs from '@/components/feed/FeedTabs';
+import CreatePostForm from '@/components/feed/CreatePostForm';
+import { useToast } from '@/hooks/use-toast';
 import FeedHeader from '@/components/feed/FeedHeader';
 import FeedLoadingState from '@/components/feed/FeedLoadingState';
 import FeedErrorState from '@/components/feed/FeedErrorState';
 import FeedContent from '@/components/feed/FeedContent';
 import FloatingCreateButton from '@/components/feed/FloatingCreateButton';
+import BottomNav from '@/components/layout/BottomNav';
+import Footer from '@/components/layout/Footer';
+import { createPost } from '@/lib/supabase';
 
 const Feed = () => {
   const { isMobile } = useMobile();
@@ -25,6 +26,16 @@ const Feed = () => {
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (process.env.NODE_ENV === 'production') {
+        await checkAllPermissions();
+      }
+    };
+    
+    checkPermissions();
+  }, []);
   
   useEffect(() => {
     if (!isUserLoading && !user && process.env.NODE_ENV !== 'development') {
@@ -109,7 +120,11 @@ const Feed = () => {
   
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F5F5] dark:bg-black">
-      <FeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+      {isMobile ? (
+        <iOSFeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+      ) : (
+        <FeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+      )}
       
       <main className="flex-1">
         <div className="max-w-[600px] mx-auto">
