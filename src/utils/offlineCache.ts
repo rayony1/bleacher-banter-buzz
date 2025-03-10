@@ -132,8 +132,8 @@ export const isOnline = async (): Promise<boolean> => {
 export const initNetworkListener = (
   onlineCallback: () => void,
   offlineCallback: () => void
-): () => void => {
-  // Get a reference to the promise for the listener
+) => {
+  // Add the network listener and get the promise
   const listenerPromise = Network.addListener('networkStatusChange', (status) => {
     console.log('Network status changed:', status.connected);
     if (status.connected) {
@@ -143,12 +143,11 @@ export const initNetworkListener = (
     }
   });
   
-  // Return a cleanup function that removes the listener when the promise resolves
+  // Return a cleanup function
   return () => {
+    // We need to resolve the promise to get the handle before removing
     listenerPromise.then(handle => {
       handle.remove();
-    }).catch(error => {
-      console.error('Error removing network listener:', error);
     });
   };
 };
