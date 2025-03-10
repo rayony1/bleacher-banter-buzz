@@ -1,71 +1,65 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Bell } from 'lucide-react';
-import { requestPushPermissions } from '@/utils/pushNotifications';
-import { toast } from '@/hooks/use-toast';
+import React, { useEffect, useState } from 'react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useAuth } from '@/lib/auth';
+import { arePushNotificationsAvailable } from '@/utils/pushNotifications';
+import NotificationPermissionDialog from './NotificationPermissionDialog';
 
-interface NotificationPermissionProps {
-  onRequestComplete?: (granted: boolean) => void;
-}
+// This component checks if notification permissions should be requested
+// and shows the permission dialog when appropriate
+const NotificationPermission: React.FC = () => {
+  const { user } = useAuth();
+  const { hasPermission } = usePushNotifications();
+  const [showDialog, setShowDialog] = useState(false);
+  const [hasChecked, setHasChecked] = useState(false);
 
-const NotificationPermission = ({ onRequestComplete }: NotificationPermissionProps) => {
-  const [isRequesting, setIsRequesting] = useState(false);
-  
-  const handleRequestPermission = async () => {
-    try {
-      setIsRequesting(true);
-      const granted = await requestPushPermissions();
-      
-      if (granted) {
-        toast({
-          title: "Notifications enabled",
-          description: "You'll receive updates about your posts and games"
-        });
-      } else {
-        toast({
-          title: "Notifications disabled",
-          description: "You can enable them later in settings",
-          variant: "destructive"
-        });
+  useEffect(() => {
+    const checkNotificationPermission = async () => {
+      // Only check if user is logged in and we haven't checked yet
+      if (user && user.id && !hasChecked && hasPermission === null) {
+        // Skip for demo users
+        if (user.id === 'demo-user-id' || process.env.NODE_ENV === 'development') {
+          console.log('Skipping push notification setup for demo user or development');
+          setHasChecked(true);
+          return;
+        }
+
+        try {
+          // Check if notifications are available on this platform
+          const available = await arePushNotificationsAvailable();
+          
+          // If available and user doesn't have preference set, show dialog
+          if (available && !localStorage.getItem('notification-preference')) {
+            setShowDialog(true);
+          }
+          
+          setHasChecked(true);
+        } catch (error) {
+          console.error('Error checking notification permission:', error);
+          setHasChecked(true);
+        }
       }
-      
-      if (onRequestComplete) {
-        onRequestComplete(granted);
-      }
-    } catch (error) {
-      console.error('Error requesting notification permission:', error);
-      toast({
-        title: "Couldn't enable notifications",
-        description: "Please try again later",
-        variant: "destructive"
-      });
-    } finally {
-      setIsRequesting(false);
+    };
+
+    checkNotificationPermission();
+  }, [user, hasPermission, hasChecked]);
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setShowDialog(open);
+    if (!open) {
+      // Save preference to avoid showing dialog again
+      localStorage.setItem('notification-preference', 'asked');
     }
   };
-  
+
+  // Only render the dialog when needed
+  if (!showDialog) return null;
+
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-4 mb-4">
-      <div className="flex items-start space-x-4">
-        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
-          <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-lg mb-1">Stay updated</h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-            Get notified about likes, comments, and game updates.
-          </p>
-          <Button 
-            onClick={handleRequestPermission}
-            disabled={isRequesting}
-            className="bg-[#2DD4BF] hover:bg-[#26B8A5] text-white rounded-full"
-          >
-            {isRequesting ? "Requesting..." : "Enable notifications"}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <NotificationPermissionDialog 
+      open={showDialog} 
+      onOpenChange={handleDialogOpenChange} 
+    />
   );
 };
 
