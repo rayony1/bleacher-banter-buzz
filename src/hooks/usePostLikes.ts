@@ -59,32 +59,32 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   useEffect(() => {
     if (!postId) return;
     
-    // Define the channel first
+    // Create a channel with a specific name
     const channel = supabase.channel(`post_likes:${postId}`);
     
-    // Then subscribe to postgres changes
+    // Subscribe to changes
     channel
-      .on(
-        'postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'post_likes',
-          filter: `post_id=eq.${postId}` 
-        }, 
-        async (payload: RealtimePostLikePayload) => {
-          const { count, error } = await getLikesCount(postId);
-          if (!error && count !== null) {
-            setLikesCount(count);
-          }
-          
-          if (user && payload.new && payload.new.user_id === user.id) {
-            setLiked(true);
-          } else if (user && payload.old && payload.old.user_id === user.id) {
-            setLiked(false);
-          }
+      .on('presence', { event: 'sync' }, () => {
+        // This is a workaround to enable postgres_changes
+        // console.log('Presence sync for post likes');
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'post_likes',
+        filter: `post_id=eq.${postId}`
+      }, async (payload: RealtimePostLikePayload) => {
+        const { count, error } = await getLikesCount(postId);
+        if (!error && count !== null) {
+          setLikesCount(count);
         }
-      )
+        
+        if (user && payload.new && payload.new.user_id === user.id) {
+          setLiked(true);
+        } else if (user && payload.old && payload.old.user_id === user.id) {
+          setLiked(false);
+        }
+      })
       .subscribe();
     
     return () => {
