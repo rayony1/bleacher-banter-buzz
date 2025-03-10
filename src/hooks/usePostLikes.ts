@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase/client';
@@ -27,6 +28,7 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
+  // Check initial like status
   useEffect(() => {
     const checkLikeStatus = async () => {
       if (!user) return;
@@ -55,34 +57,44 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     checkLikeStatus();
   }, [postId, user]);
 
+  // Set up realtime subscription
   useEffect(() => {
     if (!postId) return;
     
-    const channel = supabase.channel(`post_likes:${postId}`);
+    // Manual approach to handle realtime updates without chaining methods
+    const channelId = `post_likes:${postId}`;
+    const channel = supabase.channel(channelId);
     
-    const subscription = channel
-      .on(
-        'postgres_changes', 
-        {
-          event: '*',
-          schema: 'public',
-          table: 'post_likes',
-          filter: `post_id=eq.${postId}`
-        },
-        async (payload: RealtimePostLikePayload) => {
-          const { count, error } = await getLikesCount(postId);
-          if (!error && count !== null) {
-            setLikesCount(count);
-          }
-          
-          if (user && payload.new && payload.new.user_id === user.id) {
-            setLiked(true);
-          } else if (user && payload.old && payload.old.user_id === user.id) {
-            setLiked(false);
-          }
-        }
-      )
-      .subscribe();
+    // Configure the channel with the subscription event
+    const configuredChannel = channel.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'post_likes',
+        filter: `post_id=eq.${postId}`
+      },
+      handlePostLikeChange
+    );
+    
+    // Subscribe to the channel
+    configuredChannel.subscribe();
+    
+    // Handler function for post like changes
+    async function handlePostLikeChange(payload: RealtimePostLikePayload) {
+      // Update like count
+      const { count, error } = await getLikesCount(postId);
+      if (!error && count !== null) {
+        setLikesCount(count);
+      }
+      
+      // Update liked status if it's the current user
+      if (user && payload.new && payload.new.user_id === user.id) {
+        setLiked(true);
+      } else if (user && payload.old && payload.old.user_id === user.id) {
+        setLiked(false);
+      }
+    }
     
     return () => {
       supabase.removeChannel(channel);
