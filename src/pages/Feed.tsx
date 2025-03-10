@@ -42,7 +42,7 @@ const Feed = () => {
     }
   }, [user, isUserLoading, navigate]);
   
-  // Get feed data with the correct number of arguments
+  // Get feed data using correct arguments
   const {
     posts,
     isLoading,
@@ -51,7 +51,7 @@ const Feed = () => {
     unlikePost,
     refreshPosts,
     deletePost
-  } = useFeed(filter, user?.school || '', user?.id || '');
+  } = useFeed(filter);
   
   // Handle offline functionality
   const { networkStatus, setNetworkStatus, syncOfflinePosts } = useOfflineSync(user, refreshPosts);
