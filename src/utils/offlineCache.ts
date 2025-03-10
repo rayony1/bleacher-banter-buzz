@@ -1,4 +1,3 @@
-
 import { Network } from '@capacitor/network';
 import { Post, FeedType } from '@/lib/types';
 import { openDB, DBSchema } from 'idb';
@@ -133,7 +132,6 @@ export const initNetworkListener = (
   onlineCallback: () => void,
   offlineCallback: () => void
 ): (() => void) => {
-  // The Network.addListener method returns a PluginListenerHandle directly, not a Promise
   const listenerHandle = Network.addListener('networkStatusChange', (status) => {
     console.log('Network status changed:', status.connected);
     if (status.connected) {
