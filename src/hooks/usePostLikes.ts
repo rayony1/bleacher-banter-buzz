@@ -59,21 +59,26 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   useEffect(() => {
     if (!postId) return;
     
-    // Create a channel with a specific name
+    // Create a channel for this specific post
     const channel = supabase.channel(`post_likes:${postId}`);
     
-    // Subscribe to changes
-    channel
+    // First, register a system message handler for presence sync
+    const subscription = channel
       .on('presence', { event: 'sync' }, () => {
-        // This is a workaround to enable postgres_changes
+        // This is a workaround to enable channel functionality
         // console.log('Presence sync for post likes');
-      })
-      .on('postgres_changes', {
+      });
+      
+    // Then, separately register postgres_changes channel
+    subscription.on(
+      'postgres_changes', 
+      {
         event: '*',
         schema: 'public',
         table: 'post_likes',
         filter: `post_id=eq.${postId}`
-      }, async (payload: RealtimePostLikePayload) => {
+      }, 
+      async (payload: RealtimePostLikePayload) => {
         const { count, error } = await getLikesCount(postId);
         if (!error && count !== null) {
           setLikesCount(count);
@@ -84,8 +89,11 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
         } else if (user && payload.old && payload.old.user_id === user.id) {
           setLiked(false);
         }
-      })
-      .subscribe();
+      }
+    );
+    
+    // Finally, subscribe to the channel
+    subscription.subscribe();
     
     return () => {
       supabase.removeChannel(channel);
