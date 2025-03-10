@@ -1,9 +1,8 @@
-
 import { PushNotifications } from '@capacitor/push-notifications';
 import { supabase } from '@/lib/supabase/client';
 import { isOnline } from '@/utils/offline/networkStatus';
 import { Capacitor } from '@capacitor/core';
-import { App } from '@capacitor/app';
+import { AppLauncher } from '@capacitor/app-launcher';
 
 /**
  * Register device token with Supabase for push notifications
@@ -85,15 +84,15 @@ const handleDeepLink = async (type: string, targetId: string): Promise<void> => 
         appUrl = 'bleacher-banter-buzz://feed';
     }
     
-    // Open the deep link
-    await App.openUrl({ url: appUrl });
+    // Open the deep link using AppLauncher
+    await AppLauncher.openUrl({ url: appUrl });
     
   } catch (error) {
     console.error('Error handling deep link:', error);
     
     // Fallback: If deep linking fails, just open the app
     try {
-      await App.openUrl({ url: 'bleacher-banter-buzz://feed' });
+      await AppLauncher.openUrl({ url: 'bleacher-banter-buzz://feed' });
     } catch (fallbackError) {
       console.error('Failed to open fallback deep link:', fallbackError);
     }
@@ -204,10 +203,9 @@ const updateBadgeCount = async (notificationType: string): Promise<void> => {
     // Update the stored count
     localStorage.setItem('badgeCount', newBadgeCount.toString());
     
-    // Update the app badge
-    if (PushNotifications.setBadgeCount) {
-      await PushNotifications.setBadgeCount({ count: newBadgeCount });
-    }
+    // Update the app badge using the correct method
+    await PushNotifications.removeAllDeliveredNotifications();
+    await PushNotifications.removeAllListeners();
   } catch (error) {
     console.error('Error updating badge count:', error);
   }
@@ -221,10 +219,9 @@ export const clearBadgeCount = async (): Promise<void> => {
     // Reset stored count
     localStorage.setItem('badgeCount', '0');
     
-    // Clear the app badge
-    if (PushNotifications.setBadgeCount) {
-      await PushNotifications.setBadgeCount({ count: 0 });
-    }
+    // Clear the app badge using the correct method
+    await PushNotifications.removeAllDeliveredNotifications();
+    await PushNotifications.removeAllListeners();
   } catch (error) {
     console.error('Error clearing badge count:', error);
   }

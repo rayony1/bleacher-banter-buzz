@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
@@ -43,7 +42,7 @@ const Feed = () => {
     }
   }, [user, isUserLoading, navigate]);
   
-  // Get feed data
+  // Get feed data with the correct number of arguments
   const {
     posts,
     isLoading,
@@ -52,7 +51,7 @@ const Feed = () => {
     unlikePost,
     refreshPosts,
     deletePost
-  } = useFeed(filter);
+  } = useFeed(filter, user?.school || '', user?.id || '');
   
   // Handle offline functionality
   const { networkStatus, setNetworkStatus, syncOfflinePosts } = useOfflineSync(user, refreshPosts);
