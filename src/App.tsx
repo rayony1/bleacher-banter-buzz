@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,14 +14,12 @@ import Scoreboard from "./pages/Scoreboard";
 import Predictions from "./pages/Predictions";
 import NotFound from "./pages/NotFound";
 import AuthCallback from "./pages/AuthCallback";
+import InAppNotificationListener from './components/notifications/InAppNotificationListener';
 
-// Create a client
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Add viewport meta tag for mobile devices
   useEffect(() => {
-    // Make sure the viewport meta tag is properly set
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (viewportMeta) {
       viewportMeta.setAttribute(
@@ -47,9 +44,9 @@ const App = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/scoreboard" element={<Scoreboard />} />
               <Route path="/predictions" element={<Predictions />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <InAppNotificationListener />
             <BottomNav />
           </BrowserRouter>
         </TooltipProvider>
