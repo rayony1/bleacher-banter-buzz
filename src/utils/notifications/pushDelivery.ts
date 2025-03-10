@@ -137,7 +137,7 @@ const processNotificationData = (data: any): {
           break;
         case 'game':
           title = 'Game Update';
-          body = data.gameTitle || 'There is an update to a game you're following';
+          body = data.gameTitle || "There is an update to a game you're following";
           break;
         case 'prediction':
           title = 'Prediction Result';
