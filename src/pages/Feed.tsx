@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { FeedType } from '@/lib/types';
 import { useFeed } from '@/hooks/useFeed';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import { useNotificationSetup } from '@/hooks/useNotificationSetup';
+import { usePushNotificationsSetup } from '@/hooks/usePushNotificationsSetup';
 import { useNetworkListener } from '@/hooks/useNetworkListener';
 import { useCreatePostHandler } from '@/hooks/useCreatePostHandler';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +22,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
 import FeedLoadingState from '@/components/feed/FeedLoadingState';
 import FeedErrorState from '@/components/feed/FeedErrorState';
-import NotificationPermission from '@/components/notifications/NotificationPermission';
+import EnhancedNotificationPrompt from '@/components/notifications/EnhancedNotificationPrompt';
 import PostDialog from '@/components/feed/PostDialog';
 
 const Feed = () => {
@@ -58,11 +58,11 @@ const Feed = () => {
   // Set up network status listener
   useNetworkListener(setNetworkStatus, syncOfflinePosts, refreshPosts);
   
-  // Set up notifications
+  // Set up enhanced push notifications
   const { 
-    showNotificationPrompt, 
-    handleNotificationResponse 
-  } = useNotificationSetup(user);
+    shouldPromptForPermission,
+    requestPermission
+  } = usePushNotificationsSetup(user);
   
   // Handle post creation
   const { 
@@ -99,6 +99,15 @@ const Feed = () => {
     
     setIsRefreshing(false);
   };
+
+  const handleAcceptNotifications = () => {
+    requestPermission();
+  };
+
+  const handleDeclineNotifications = () => {
+    // Track that the user has seen the prompt
+    localStorage.setItem('notificationsPromptDismissed', 'true');
+  };
   
   if (isUserLoading || (isLoading && !posts.length)) {
     return <FeedLoadingState filter={filter} onTabChange={setFilter} />;
@@ -128,9 +137,12 @@ const Feed = () => {
         <div className="max-w-[600px] mx-auto">
           <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
           
-          {showNotificationPrompt && (
+          {shouldPromptForPermission() && (
             <div className="px-4 pt-4">
-              <NotificationPermission onRequestComplete={handleNotificationResponse} />
+              <EnhancedNotificationPrompt 
+                onAccept={handleAcceptNotifications}
+                onDecline={handleDeclineNotifications}
+              />
             </div>
           )}
           
