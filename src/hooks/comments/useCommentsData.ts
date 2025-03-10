@@ -17,7 +17,7 @@ export const useCommentsData = (postId: string) => {
       // Transform to Comment type 
       return {
         data: data?.map(comment => ({
-          id: comment.id,
+          id: comment.id || comment.comment_id,
           content: comment.content,
           post_id: comment.post_id,
           user_id: comment.user_id,
@@ -26,8 +26,9 @@ export const useCommentsData = (postId: string) => {
           createdAt: new Date(comment.timestamp),
           author: {
             username: comment.author?.username || 'Anonymous',
-            avatar_url: comment.author?.avatar_url,
-            avatar: comment.author?.avatar_url
+            // Use default avatar since avatar_url doesn't exist in the profiles table
+            avatar_url: '/placeholder.svg',
+            avatar: '/placeholder.svg'
           }
         })),
         error: null

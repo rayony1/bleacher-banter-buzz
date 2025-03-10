@@ -6,7 +6,7 @@ export const getPostComments = async (postId: string) => {
     .from('comments')
     .select(`
       *,
-      author:user_id (username, avatar_url)
+      author:user_id (username, user_id)
     `)
     .eq('post_id', postId)
     .order('timestamp', { ascending: false });

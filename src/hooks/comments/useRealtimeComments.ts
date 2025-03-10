@@ -20,12 +20,12 @@ export const useRealtimeComments = (postId: string, onNewComment: (comment: Comm
             try {
               const { data: authorData } = await supabase
                 .from('profiles')
-                .select('username, avatar_url')
+                .select('username')
                 .eq('user_id', newComment.user_id)
                 .single();
               
               const commentWithAuthor: Comment = {
-                id: newComment.id,
+                id: newComment.id || newComment.comment_id,
                 content: newComment.content,
                 post_id: newComment.post_id,
                 user_id: newComment.user_id,
@@ -34,8 +34,8 @@ export const useRealtimeComments = (postId: string, onNewComment: (comment: Comm
                 createdAt: new Date(newComment.timestamp),
                 author: {
                   username: authorData?.username || 'User',
-                  avatar_url: authorData?.avatar_url || '',
-                  avatar: authorData?.avatar_url || ''
+                  avatar_url: '/placeholder.svg',
+                  avatar: '/placeholder.svg'
                 }
               };
               
@@ -44,7 +44,7 @@ export const useRealtimeComments = (postId: string, onNewComment: (comment: Comm
               console.error('Error fetching comment author:', err);
               // Add comment without author details as fallback
               const fallbackComment: Comment = {
-                id: newComment.id,
+                id: newComment.id || newComment.comment_id,
                 content: newComment.content,
                 post_id: newComment.post_id,
                 user_id: newComment.user_id,
@@ -53,8 +53,8 @@ export const useRealtimeComments = (postId: string, onNewComment: (comment: Comm
                 createdAt: new Date(newComment.timestamp),
                 author: {
                   username: 'User',
-                  avatar_url: '',
-                  avatar: ''
+                  avatar_url: '/placeholder.svg',
+                  avatar: '/placeholder.svg'
                 }
               };
               

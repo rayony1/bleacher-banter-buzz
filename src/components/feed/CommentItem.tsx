@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Heart, MessageCircle } from 'lucide-react';
 import { Comment } from '@/hooks/comments/types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface CommentItemProps {
   comment: Comment;
@@ -12,6 +14,11 @@ const CommentItem = ({ comment }: CommentItemProps) => {
   
   return (
     <div className="flex gap-3">
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={comment.author?.avatar || '/placeholder.svg'} alt={comment.author?.username} />
+        <AvatarFallback>{comment.author?.username.charAt(0)}</AvatarFallback>
+      </Avatar>
+      
       <div className="flex-1">
         <div className="flex flex-col">
           <div className="flex items-center space-x-1">
