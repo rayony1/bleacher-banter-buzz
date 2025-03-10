@@ -1,135 +1,148 @@
 
-import { Post } from '@/lib/types';
-import { toast } from "@/hooks/use-toast";
 import { Network } from '@capacitor/network';
+import { Post, FeedType } from '@/lib/types';
+import { openDB, DBSchema } from 'idb';
 
-// Type for offline post queue
-export interface OfflinePost {
-  content: string;
-  imageUrl?: string;
-  isAnonymous: boolean;
-  createdAt: string;
+// Define database schema
+interface BleacherBanterDB extends DBSchema {
+  posts: {
+    key: string;
+    value: {
+      posts: Post[];
+      feedType: FeedType;
+      timestamp: number;
+    };
+  };
+  offlineQueue: {
+    key: string;
+    value: {
+      content: string;
+      imageUrl?: string;
+      isAnonymous: boolean;
+      createdAt: string;
+    };
+  };
 }
 
-// Local storage keys
-const CACHE_KEYS = {
-  POSTS: 'bleacher_banter_cached_posts',
-  OFFLINE_QUEUE: 'bleacher_banter_offline_posts',
-  NETWORK_STATUS: 'bleacher_banter_network_status'
-};
+// Database setup
+const dbPromise = openDB<BleacherBanterDB>('bleacherBanterDB', 1, {
+  upgrade(db) {
+    // Create posts store - keyed by feedType
+    db.createObjectStore('posts');
+    
+    // Create offlineQueue store for posts created while offline
+    db.createObjectStore('offlineQueue', { keyPath: 'createdAt' });
+  },
+});
 
-// Cache posts in local storage
-export const cachePosts = (posts: Post[], feedType: string): void => {
+/**
+ * Cache posts by feed type
+ */
+export const cachePosts = async (posts: Post[], feedType: FeedType): Promise<void> => {
   try {
-    const cacheKey = `${CACHE_KEYS.POSTS}_${feedType}`;
-    localStorage.setItem(cacheKey, JSON.stringify(posts));
+    const db = await dbPromise;
+    await db.put('posts', {
+      posts,
+      feedType,
+      timestamp: Date.now(),
+    }, feedType);
     console.log(`Cached ${posts.length} posts for ${feedType} feed`);
   } catch (error) {
     console.error('Error caching posts:', error);
   }
 };
 
-// Get cached posts from local storage
-export const getCachedPosts = (feedType: string): Post[] => {
+/**
+ * Get cached posts by feed type
+ */
+export const getCachedPosts = async (feedType: FeedType): Promise<Post[]> => {
   try {
-    const cacheKey = `${CACHE_KEYS.POSTS}_${feedType}`;
-    const cachedData = localStorage.getItem(cacheKey);
+    const db = await dbPromise;
+    const cachedData = await db.get('posts', feedType);
+    
     if (cachedData) {
-      return JSON.parse(cachedData);
+      console.log(`Retrieved ${cachedData.posts.length} cached posts for ${feedType} feed`);
+      return cachedData.posts;
     }
-  } catch (error) {
-    console.error('Error retrieving cached posts:', error);
-  }
-  return [];
-};
-
-// Queue a post for when the device comes back online
-export const queueOfflinePost = (post: OfflinePost): void => {
-  try {
-    const queue = getOfflinePostQueue();
-    queue.push(post);
-    localStorage.setItem(CACHE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
     
-    toast({
-      title: "Post saved offline",
-      description: "Your post will be published when you're back online",
-    });
-    
-    console.log('Post queued for offline sync', post);
+    return [];
   } catch (error) {
-    console.error('Error queueing offline post:', error);
-    
-    toast({
-      title: "Couldn't save post",
-      description: "There was an error saving your post offline",
-      variant: "destructive"
-    });
-  }
-};
-
-// Get the offline post queue
-export const getOfflinePostQueue = (): OfflinePost[] => {
-  try {
-    const queue = localStorage.getItem(CACHE_KEYS.OFFLINE_QUEUE);
-    return queue ? JSON.parse(queue) : [];
-  } catch (error) {
-    console.error('Error getting offline post queue:', error);
+    console.error('Error getting cached posts:', error);
     return [];
   }
 };
 
-// Clear specific post from the offline queue
-export const removeFromOfflineQueue = (index: number): void => {
+/**
+ * Queue a post for later submission when online
+ */
+export const queueOfflinePost = async (post: {
+  content: string;
+  imageUrl?: string;
+  isAnonymous: boolean;
+  createdAt: string;
+}): Promise<void> => {
   try {
-    const queue = getOfflinePostQueue();
-    if (index >= 0 && index < queue.length) {
-      queue.splice(index, 1);
-      localStorage.setItem(CACHE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
-    }
+    const db = await dbPromise;
+    await db.add('offlineQueue', post);
+    console.log('Post queued for later submission');
+  } catch (error) {
+    console.error('Error queuing offline post:', error);
+  }
+};
+
+/**
+ * Get all queued offline posts
+ */
+export const getOfflineQueue = async (): Promise<any[]> => {
+  try {
+    const db = await dbPromise;
+    return await db.getAll('offlineQueue');
+  } catch (error) {
+    console.error('Error getting offline queue:', error);
+    return [];
+  }
+};
+
+/**
+ * Remove a post from the offline queue
+ */
+export const removeFromOfflineQueue = async (createdAt: string): Promise<void> => {
+  try {
+    const db = await dbPromise;
+    await db.delete('offlineQueue', createdAt);
+    console.log('Post removed from offline queue');
   } catch (error) {
     console.error('Error removing post from offline queue:', error);
   }
 };
 
-// Check if device is online
+/**
+ * Check if the device is online
+ */
 export const isOnline = async (): Promise<boolean> => {
-  try {
-    const status = await Network.getStatus();
-    return status.connected;
-  } catch (error) {
-    console.error('Error checking network status:', error);
-    // Fallback to navigator.onLine if Capacitor Network fails
-    return navigator.onLine;
-  }
+  const status = await Network.getStatus();
+  return status.connected;
 };
 
-// Initialize network status listener
+/**
+ * Initialize network status listener
+ * @param onlineCallback Called when connection is restored
+ * @param offlineCallback Called when connection is lost
+ */
 export const initNetworkListener = (
-  onlineCallback: () => void, 
+  onlineCallback: () => void,
   offlineCallback: () => void
 ): (() => void) => {
-  let listener: any;
-  
-  // Create the listener and store the handle
-  Network.addListener('networkStatusChange', (status) => {
-    // Save current network status
-    localStorage.setItem(CACHE_KEYS.NETWORK_STATUS, status.connected ? 'online' : 'offline');
-    
+  const listener = Network.addListener('networkStatusChange', (status) => {
+    console.log('Network status changed:', status.connected);
     if (status.connected) {
-      console.log('Device is online');
       onlineCallback();
     } else {
-      console.log('Device is offline');
       offlineCallback();
     }
-  }).then(handle => {
-    listener = handle;
   });
   
-  // Return a cleanup function
   return () => {
-    if (listener) {
-      listener.remove();
-    }
+    listener.remove();
   };
 };
