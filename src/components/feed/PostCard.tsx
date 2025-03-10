@@ -10,23 +10,14 @@ import PostImages from './PostImages';
 import PostInteractions from './PostInteractions';
 import PostComments from './PostComments';
 
-const PostCard = ({ post, onLike, onUnlike, disableInteractions = false }: PostCardProps) => {
+const PostCard = ({ post, disableInteractions = false }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const { user } = useAuth();
-  const { liked, likesCount, setLiked, setLikesCount } = usePostLikes(post.id, post.likes || 0);
+  const { liked, likesCount, isLoading, toggleLike } = usePostLikes(post.id, post.likes || 0);
   
   const handleLike = () => {
-    if (disableInteractions) return;
-    
-    if (liked) {
-      onUnlike(post.id);
-      setLiked(false);
-      setLikesCount(prev => Math.max(0, prev - 1));
-    } else {
-      onLike(post.id);
-      setLiked(true);
-      setLikesCount(prev => prev + 1);
-    }
+    if (disableInteractions || isLoading) return;
+    toggleLike();
   };
   
   return (
