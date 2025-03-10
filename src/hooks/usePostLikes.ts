@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase/client';
@@ -83,9 +82,9 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
           });
           
           // Update liked status if it's the current user
-          if (user && payload.new && payload.new.user_id === user.id) {
+          if (user && payload.new && 'user_id' in payload.new && payload.new.user_id === user.id) {
             setLiked(true);
-          } else if (user && payload.old && payload.old.user_id === user.id) {
+          } else if (user && payload.old && 'user_id' in payload.old && payload.old.user_id === user.id) {
             setLiked(false);
           }
         }
