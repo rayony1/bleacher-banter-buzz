@@ -45,8 +45,8 @@ export const useRealtimePosts = (
               return;
             }
             
-            // Make sure we have a post_id before proceeding
-            if (payload.new && 'post_id' in payload.new && payload.new.post_id) {
+            // Make sure payload.new exists and has post_id before proceeding
+            if (payload.new && typeof payload.new === 'object' && 'post_id' in payload.new && payload.new.post_id) {
               try {
                 const postId = payload.new.post_id;
                 
