@@ -26,7 +26,6 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Check if the user has liked this post
   useEffect(() => {
     const checkLikeStatus = async () => {
       if (!user) return;
@@ -39,7 +38,6 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
         
         setLiked(!!data);
         
-        // Get the likes count
         const { count, error: countError } = await getLikesCount(postId);
         
         if (countError) throw countError;
@@ -56,14 +54,13 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     checkLikeStatus();
   }, [postId, user]);
 
-  // Subscribe to real-time changes
   useEffect(() => {
     if (!postId) return;
     
     const channel = supabase
       .channel(`post_likes:${postId}`)
       .on(
-        'postgres_changes' as const,
+        'postgres_changes',
         { 
           event: '*', 
           schema: 'public', 
@@ -71,13 +68,11 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
           filter: `post_id=eq.${postId}` 
         }, 
         async (payload: RealtimePostLikePayload) => {
-          // Update likes count after any change
           const { count, error } = await getLikesCount(postId);
           if (!error && count !== null) {
             setLikesCount(count);
           }
           
-          // Update liked status if the user is the one who liked/unliked
           if (user && payload.new && payload.new.user_id === user.id) {
             setLiked(true);
           } else if (user && payload.old && payload.old.user_id === user.id) {
@@ -92,7 +87,6 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     };
   }, [postId, user]);
 
-  // Handle liking and unliking a post
   const toggleLike = async () => {
     if (!user) {
       toast({
@@ -109,7 +103,6 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
       setIsLoading(true);
       
       if (liked) {
-        // Unlike the post
         const { error } = await unlikePost(postId, user.id);
         if (error) throw error;
         
@@ -121,7 +114,6 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
           description: "You've removed your like from this post"
         });
       } else {
-        // Like the post
         const { error } = await likePost(postId, user.id);
         if (error) throw error;
         
