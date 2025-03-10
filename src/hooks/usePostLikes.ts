@@ -7,14 +7,11 @@ import { useToast } from '@/hooks/use-toast';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // Type for the realtime payload we'll receive from Supabase
-type PostLikeChange = {
+interface PostLikeChange {
   user_id: string;
   post_id: string;
   created_at?: string;
-};
-
-// Type for Postgres changes payload
-type PostLikeChangesPayload = RealtimePostgresChangesPayload<PostLikeChange>;
+}
 
 export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const [liked, setLiked] = useState(false);
@@ -70,17 +67,18 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
           table: 'post_likes',
           filter: `post_id=eq.${postId}`
         },
-        async (payload: PostLikeChangesPayload) => {
-          // Update like count
-          const { count, error } = await getLikesCount(postId);
-          if (!error && count !== null) {
-            setLikesCount(count);
-          }
+        (payload: RealtimePostgresChangesPayload<PostLikeChange>) => {
+          // Get updated like count
+          getLikesCount(postId).then(({ count, error }) => {
+            if (!error && count !== null) {
+              setLikesCount(count);
+            }
+          });
           
           // Update liked status if it's the current user
-          if (user && payload.new && payload.new.user_id === user.id) {
+          if (user && payload.new && 'user_id' in payload.new && payload.new.user_id === user.id) {
             setLiked(true);
-          } else if (user && payload.old && payload.old.user_id === user.id) {
+          } else if (user && payload.old && 'user_id' in payload.old && payload.old.user_id === user.id) {
             setLiked(false);
           }
         }
