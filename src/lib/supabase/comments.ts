@@ -1,7 +1,6 @@
 
 import { supabase } from './client';
 
-// Comment functions
 export const getPostComments = async (postId: string) => {
   return await supabase
     .from('comments')

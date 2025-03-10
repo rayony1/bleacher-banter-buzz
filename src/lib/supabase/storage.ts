@@ -1,16 +1,6 @@
 
 import { supabase } from './client';
 
-// File upload functions
-export const uploadFile = async (bucket: string, path: string, file: File) => {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file, { upsert: true });
-  
-  if (error) throw new Error(`Upload failed: ${error.message}`);
-  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-};
-
 export const uploadImage = async (file: File, path?: string): Promise<string> => {
   try {
     // Validate file size and type
