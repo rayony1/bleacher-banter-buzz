@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
@@ -52,7 +53,8 @@ const Feed = () => {
   } = useFeed(
     filter, 
     user?.id || '', 
-    user?.school || ''
+    user?.school || '',
+    user?.school || '' // Add the missing third argument
   );
   
   const { 
