@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Heart, MessageCircle, Share, Bookmark, BarChart2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePostBookmarks } from '@/hooks/usePostBookmarks';
 
 interface PostInteractionsProps {
   comments: number;
@@ -23,23 +23,18 @@ const PostInteractions = ({
   postId 
 }: PostInteractionsProps) => {
   const { toast } = useToast();
+  const { isBookmarked, toggleBookmark } = usePostBookmarks(postId);
   
   const handleBookmark = () => {
     if (disableInteractions) return;
-    
-    toast({
-      title: "Post saved",
-      description: "This post has been added to your bookmarks",
-    });
+    toggleBookmark();
   };
   
   const handleShare = () => {
     if (disableInteractions) return;
     
-    // Get the current URL and append the post ID
     const shareUrl = `${window.location.origin}/post/${postId}`;
     
-    // Try to use the Web Share API if available
     if (navigator.share) {
       navigator.share({
         title: 'Check out this post',
@@ -51,11 +46,9 @@ const PostInteractions = ({
       })
       .catch((error) => {
         console.error('Error sharing post:', error);
-        // Fallback to copying the URL
         copyToClipboard(shareUrl);
       });
     } else {
-      // Fallback for browsers that don't support the Web Share API
       copyToClipboard(shareUrl);
     }
   };
@@ -78,14 +71,11 @@ const PostInteractions = ({
       });
   };
   
-  // Calculate a deterministic view count based on post ID and likes
   const getViewCount = () => {
-    // Create a simple hash from the post ID
     const hash = postId.split('').reduce((acc, char) => {
       return acc + char.charCodeAt(0);
     }, 0);
     
-    // Generate a view count that's relative to likes but feels realistic
     return Math.max(
       likes * 10 + (hash % 100),
       20 + (hash % 50)
@@ -148,13 +138,17 @@ const PostInteractions = ({
       </button>
       
       <button 
-        className="flex items-center space-x-1 group"
+        className={`flex items-center space-x-1 group ${isBookmarked ? 'text-[#2DD4BF]' : ''}`}
         onClick={handleBookmark}
         disabled={disableInteractions}
-        aria-label="Bookmark post"
+        aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
       >
-        <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-[#2DD4BF] transition-colors">
-          <Bookmark className="h-5 w-5" />
+        <div className={`p-2 rounded-full ${
+          isBookmarked 
+            ? 'bg-[#2DD4BF]/10 text-[#2DD4BF]' 
+            : 'group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-[#2DD4BF]'
+        } transition-colors`}>
+          <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-[#2DD4BF]' : ''}`} />
         </div>
       </button>
     </div>
