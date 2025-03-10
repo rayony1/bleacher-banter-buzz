@@ -31,20 +31,19 @@ export const isOnline = async (timeout = DEFAULT_TIMEOUT): Promise<boolean> => {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
-      // Try to fetch a tiny resource to validate real connectivity
-      // Use a simpler approach that is less likely to fail due to CORS
-      // In a real implementation, we'd use a dedicated endpoint for checking connectivity
+      // Use a reliable endpoint that's less likely to be blocked or have CORS issues
       const response = await fetch(
-        'https://www.google.com/favicon.ico',
+        'https://www.google.com/generate_204', // Google's connectivity check endpoint
         { 
           method: 'HEAD',
           signal: controller.signal,
-          mode: 'no-cors' // Avoid CORS issues with the test endpoint
+          mode: 'no-cors', // Avoid CORS issues
+          cache: 'no-store' // Ensure we're not using cached responses
         }
       );
       
       clearTimeout(timeoutId);
-      return true; // If no error occurs, we're online regardless of response.ok (due to no-cors)
+      return true; // If no error, we're online
     } catch (error) {
       clearTimeout(timeoutId);
       console.warn('Network validation request failed:', error);
@@ -104,6 +103,9 @@ export const initNetworkListener = (
 ) => {
   let isCurrentlyOnline = navigator.onLine;
   let checkingStatus = false;
+  let listenerHandle: any = null;
+  let periodicCheckId: number | null = null;
+  let debounceTimeout: number | null = null;
   
   // Function to validate connection status with retry logic
   const validateConnectionStatus = async () => {
@@ -123,7 +125,7 @@ export const initNetworkListener = (
       }
     } catch (error) {
       console.error('Error validating connection status:', error);
-      // If validation fails, assume we're offline
+      // If validation fails, assume we're offline for safety
       if (isCurrentlyOnline) {
         isCurrentlyOnline = false;
         offlineCallback();
@@ -134,34 +136,54 @@ export const initNetworkListener = (
   };
   
   // Set up periodic connection check (every 30s)
-  const periodicCheckId = setInterval(validateConnectionStatus, 30000);
+  periodicCheckId = window.setInterval(validateConnectionStatus, 30000) as unknown as number;
   
   // Register for Capacitor network events with debounce
-  let debounceTimeout: number | null = null;
   const debouncedStatusChange = (status: { connected: boolean }) => {
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
     }
     
     // Debounce network changes to avoid rapid flapping
-    debounceTimeout = setTimeout(() => {
+    debounceTimeout = window.setTimeout(() => {
       console.log('Network status changed:', status.connected);
       validateConnectionStatus();
     }, 1000) as unknown as number;
   };
   
-  // Get the promise for the listener handle
-  const handlePromise = Network.addListener('networkStatusChange', debouncedStatusChange);
+  // Set up the Capacitor Network listener
+  Network.addListener('networkStatusChange', debouncedStatusChange)
+    .then(handle => {
+      listenerHandle = handle;
+    })
+    .catch(error => {
+      console.error('Failed to add network listener:', error);
+    });
+  
+  // Also set up browser online/offline events as fallback
+  window.addEventListener('online', validateConnectionStatus);
+  window.addEventListener('offline', validateConnectionStatus);
   
   // Do initial connection check
   validateConnectionStatus();
   
   // Return a cleanup function that properly removes all listeners
   return () => {
-    handlePromise.then(handle => handle.remove());
-    clearInterval(periodicCheckId);
+    if (listenerHandle) {
+      listenerHandle.remove().catch((err: any) => 
+        console.error('Error removing Capacitor listener:', err)
+      );
+    }
+    
+    if (periodicCheckId !== null) {
+      clearInterval(periodicCheckId);
+    }
+    
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
     }
+    
+    window.removeEventListener('online', validateConnectionStatus);
+    window.removeEventListener('offline', validateConnectionStatus);
   };
 };

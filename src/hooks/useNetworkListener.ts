@@ -68,7 +68,7 @@ export const useNetworkListener = (
       }
     };
     
-    // Initialize the network listener (returns a cleanup function directly)
+    // Initialize the network listener
     const cleanup = initNetworkListener(handleOnline, handleOffline);
     
     // Return the cleanup function
