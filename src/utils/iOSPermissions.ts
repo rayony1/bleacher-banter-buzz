@@ -1,7 +1,7 @@
 
 import { Camera } from '@capacitor/camera';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Toast } from '@/components/ui/use-toast';
+import { toast } from "@/hooks/use-toast";
 
 export const requestCameraPermission = async () => {
   try {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
@@ -8,7 +9,7 @@ import { checkAllPermissions } from '@/utils/iOSPermissions';
 import iOSFeedHeader from '@/components/feed/iOSFeedHeader';
 import FeedTabs from '@/components/feed/FeedTabs';
 import CreatePostForm from '@/components/feed/CreatePostForm';
-import { useToast } from '@/hooks/use-toast';
+import { useToast, toast } from '@/hooks/use-toast';
 import FeedHeader from '@/components/feed/FeedHeader';
 import FeedLoadingState from '@/components/feed/FeedLoadingState';
 import FeedErrorState from '@/components/feed/FeedErrorState';
@@ -17,6 +18,12 @@ import FloatingCreateButton from '@/components/feed/FloatingCreateButton';
 import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
 import { createPost } from '@/lib/supabase';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 
 const Feed = () => {
   const { isMobile } = useMobile();
