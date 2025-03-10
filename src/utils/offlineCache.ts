@@ -22,16 +22,32 @@ interface BleacherBanterDB extends DBSchema {
       createdAt: string;
     };
   };
+  offlineImages: {
+    key: string;
+    value: {
+      imageUrl: string;
+      imageData: Blob;
+    };
+  };
 }
 
 // Database setup
-const dbPromise = openDB<BleacherBanterDB>('bleacherBanterDB', 1, {
-  upgrade(db) {
+const dbPromise = openDB<BleacherBanterDB>('bleacherBanterDB', 2, {
+  upgrade(db, oldVersion, newVersion) {
     // Create posts store - keyed by feedType
-    db.createObjectStore('posts');
+    if (!db.objectStoreNames.contains('posts')) {
+      db.createObjectStore('posts');
+    }
     
     // Create offlineQueue store for posts created while offline
-    db.createObjectStore('offlineQueue', { keyPath: 'createdAt' });
+    if (!db.objectStoreNames.contains('offlineQueue')) {
+      db.createObjectStore('offlineQueue', { keyPath: 'createdAt' });
+    }
+    
+    // Add store for offline images (new in v2)
+    if (oldVersion < 2) {
+      db.createObjectStore('offlineImages', { keyPath: 'imageUrl' });
+    }
   },
 });
 
@@ -73,6 +89,46 @@ export const getCachedPosts = async (feedType: FeedType): Promise<Post[]> => {
 };
 
 /**
+ * Cache an image from a URL (for offline use)
+ */
+export const cacheImage = async (imageUrl: string): Promise<void> => {
+  try {
+    // Only cache if it's a web URL (not a blob or data URL)
+    if (!imageUrl.startsWith('blob:') && !imageUrl.startsWith('data:')) {
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`);
+      
+      const imageBlob = await response.blob();
+      const db = await dbPromise;
+      await db.put('offlineImages', { imageUrl, imageData: imageBlob });
+      console.log('Image cached successfully:', imageUrl);
+    }
+  } catch (error) {
+    console.error('Error caching image:', error);
+  }
+};
+
+/**
+ * Get a cached image
+ */
+export const getCachedImage = async (imageUrl: string): Promise<string | null> => {
+  try {
+    const db = await dbPromise;
+    const cachedImage = await db.get('offlineImages', imageUrl);
+    
+    if (cachedImage && cachedImage.imageData) {
+      const objectUrl = URL.createObjectURL(cachedImage.imageData);
+      return objectUrl;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting cached image:', error);
+    return null;
+  }
+};
+
+/**
  * Queue a post for later submission when online
  */
 export const queueOfflinePost = async (post: {
@@ -83,6 +139,12 @@ export const queueOfflinePost = async (post: {
 }): Promise<void> => {
   try {
     const db = await dbPromise;
+    
+    // If the post has an image, cache it
+    if (post.imageUrl) {
+      await cacheImage(post.imageUrl);
+    }
+    
     await db.add('offlineQueue', post);
     console.log('Post queued for later submission');
   } catch (error) {

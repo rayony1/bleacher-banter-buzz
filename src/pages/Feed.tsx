@@ -29,6 +29,8 @@ import {
   cachePosts, 
   getCachedPosts, 
   queueOfflinePost, 
+  getOfflineQueue,
+  removeFromOfflineQueue,
   initNetworkListener, 
   isOnline 
 } from '@/utils/offlineCache';
@@ -65,6 +67,9 @@ const Feed = () => {
           title: "You're back online",
           description: "Your feed will now update with the latest posts"
         });
+        
+        // Process any offline posts
+        syncOfflinePosts();
         refreshPosts();
       },
       // Offline callback
@@ -81,6 +86,53 @@ const Feed = () => {
     // Return the cleanup function
     return cleanup;
   }, []);
+  
+  // Sync offline posts when we come back online
+  const syncOfflinePosts = async () => {
+    if (!user) return;
+    
+    try {
+      const offlinePosts = await getOfflineQueue();
+      if (offlinePosts.length === 0) return;
+      
+      toast({
+        title: "Syncing posts",
+        description: `Uploading ${offlinePosts.length} offline post(s)`
+      });
+      
+      for (const post of offlinePosts) {
+        try {
+          await createPost(
+            post.content, 
+            user.school, 
+            user.id, 
+            post.isAnonymous, 
+            post.imageUrl ? [post.imageUrl] : undefined
+          );
+          
+          // Remove the post from the offline queue
+          await removeFromOfflineQueue(post.createdAt);
+        } catch (error) {
+          console.error('Error syncing offline post:', error);
+        }
+      }
+      
+      toast({
+        title: "Posts synced",
+        description: "Your offline posts have been uploaded"
+      });
+      
+      // Refresh the feed to show the new posts
+      refreshPosts();
+    } catch (error) {
+      console.error('Error syncing offline posts:', error);
+      toast({
+        title: "Sync failed",
+        description: "Failed to upload some offline posts",
+        variant: "destructive"
+      });
+    }
+  };
   
   // Set up push notifications
   useEffect(() => {
@@ -183,13 +235,18 @@ const Feed = () => {
       
       if (!online) {
         // Queue post for later if offline
-        queueOfflinePost({
+        await queueOfflinePost({
           content,
           imageUrl,
           isAnonymous: false,
           createdAt: new Date().toISOString()
         });
+        
         setCreatePostOpen(false);
+        toast({
+          title: "Post saved",
+          description: "Your post will be uploaded when you're back online"
+        });
         setIsCreatingPost(false);
         return;
       }
