@@ -1,3 +1,4 @@
+
 import { Network } from '@capacitor/network';
 import { Post, FeedType } from '@/lib/types';
 import { openDB, DBSchema } from 'idb';
@@ -128,11 +129,12 @@ export const isOnline = async (): Promise<boolean> => {
  * @param onlineCallback Called when connection is restored
  * @param offlineCallback Called when connection is lost
  */
-export const initNetworkListener = (
+export const initNetworkListener = async (
   onlineCallback: () => void,
   offlineCallback: () => void
-): (() => void) => {
-  const listenerHandle = Network.addListener('networkStatusChange', (status) => {
+): Promise<() => void> => {
+  // Get the plugin listener handle by awaiting the promise
+  const listenerHandle = await Network.addListener('networkStatusChange', (status) => {
     console.log('Network status changed:', status.connected);
     if (status.connected) {
       onlineCallback();
