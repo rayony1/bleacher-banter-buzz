@@ -11,6 +11,8 @@ import { useNetworkListener } from '@/hooks/useNetworkListener';
 import { useCreatePostHandler } from '@/hooks/useCreatePostHandler';
 import { useToast } from '@/hooks/use-toast';
 import { cachePosts, getCachedPosts, isOnline } from '@/utils/offlineCache';
+import { clearBadgeCount } from '@/utils/notifications/pushDelivery';
+import { Capacitor } from '@capacitor/core';
 
 // Components
 import IOSFeedHeader from '@/components/feed/IOSFeedHeader';
@@ -69,6 +71,25 @@ const Feed = () => {
     handleCreatePost, 
     isCreatingPost 
   } = useCreatePostHandler(user, refreshPosts, () => setCreatePostOpen(false));
+  
+  // Clear badge count when app is opened/foregrounded
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      // Clear badge count when feed is loaded
+      clearBadgeCount();
+      
+      // Also set up listener for when app comes to foreground
+      const appStateListener = Capacitor.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          clearBadgeCount();
+        }
+      });
+      
+      return () => {
+        appStateListener.remove();
+      };
+    }
+  }, []);
   
   // Cache posts when they change
   useEffect(() => {
