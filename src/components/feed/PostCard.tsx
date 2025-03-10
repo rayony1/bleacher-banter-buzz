@@ -10,7 +10,7 @@ import PostImages from './PostImages';
 import PostInteractions from './PostInteractions';
 import PostComments from './PostComments';
 
-const PostCard = ({ post, disableInteractions = false, onDelete }: PostCardProps) => {
+const PostCard = ({ post, onLike, onUnlike, disableInteractions = false, onDelete }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const { user } = useAuth();
   const { liked, likesCount, isLoading, toggleLike } = usePostLikes(post.id, post.likes || 0);

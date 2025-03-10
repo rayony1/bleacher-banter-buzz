@@ -1,3 +1,4 @@
+
 export type User = {
   id: string;
   username: string;
@@ -50,6 +51,7 @@ export type PostCardProps = {
   onLike: (postId: string) => void;
   onUnlike: (postId: string) => void;
   disableInteractions?: boolean;
+  onDelete?: (postId: string) => void;
 };
 
 export type PredictionCardProps = {
