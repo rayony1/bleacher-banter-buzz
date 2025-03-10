@@ -35,14 +35,12 @@ const Feed = () => {
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Redirect if not logged in
   useEffect(() => {
     if (!isUserLoading && !user && process.env.NODE_ENV !== 'development') {
       navigate('/auth');
     }
   }, [user, isUserLoading, navigate]);
   
-  // Get feed data using correct arguments
   const {
     posts,
     isLoading,
@@ -51,33 +49,30 @@ const Feed = () => {
     unlikePost,
     refreshPosts,
     deletePost
-  } = useFeed(filter);
+  } = useFeed(filter, user?.id || '', user?.school || '');
   
-  // Handle offline functionality
-  const { networkStatus, setNetworkStatus, syncOfflinePosts } = useOfflineSync(user, refreshPosts);
+  const { 
+    networkStatus, 
+    setNetworkStatus, 
+    syncOfflinePosts 
+  } = useOfflineSync(user, refreshPosts);
   
-  // Set up network status listener
   useNetworkListener(setNetworkStatus, syncOfflinePosts, refreshPosts);
   
-  // Set up enhanced push notifications
   const { 
     shouldPromptForPermission,
     requestPermission
   } = usePushNotificationsSetup(user);
   
-  // Handle post creation
   const { 
     handleCreatePost, 
     isCreatingPost 
   } = useCreatePostHandler(user, refreshPosts, () => setCreatePostOpen(false));
   
-  // Clear badge count when app is opened/foregrounded
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Clear badge count when feed is loaded
       clearBadgeCount();
       
-      // Also set up listener for when app comes to foreground
       const appStateListener = Capacitor.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           clearBadgeCount();
@@ -90,7 +85,6 @@ const Feed = () => {
     }
   }, []);
   
-  // Cache posts when they change
   useEffect(() => {
     if (posts && posts.length > 0) {
       cachePosts(posts, filter);
@@ -100,7 +94,6 @@ const Feed = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     
-    // Check if we're online before refreshing
     const online = await isOnline();
     
     if (online) {
@@ -125,7 +118,6 @@ const Feed = () => {
   };
 
   const handleDeclineNotifications = () => {
-    // Track that the user has seen the prompt
     localStorage.setItem('notificationsPromptDismissed', 'true');
   };
   
