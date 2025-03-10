@@ -4,7 +4,7 @@ import { PushNotifications, PermissionStatus } from '@capacitor/push-notificatio
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/lib/types';
-import { registerDeviceToken, removeDeviceToken, handleReceivedNotification } from '@/utils/notifications/pushDelivery';
+import { registerDeviceToken, removeDeviceToken, handleReceivedNotification } from '@/utils/notifications/index';
 import { isOnline } from '@/utils/offline/networkStatus';
 
 export const usePushNotificationsSetup = (user: User | null) => {

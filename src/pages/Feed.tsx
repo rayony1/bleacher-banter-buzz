@@ -10,7 +10,7 @@ import { useNetworkListener } from '@/hooks/useNetworkListener';
 import { useCreatePostHandler } from '@/hooks/useCreatePostHandler';
 import { useToast } from '@/hooks/use-toast';
 import { cachePosts, getCachedPosts, isOnline } from '@/utils/offlineCache';
-import { clearBadgeCount } from '@/utils/notifications/pushDelivery';
+import { clearBadgeCount } from '@/utils/notifications/index';
 import { Capacitor } from '@capacitor/core';
 
 // Components
