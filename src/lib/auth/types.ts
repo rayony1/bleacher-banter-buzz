@@ -23,3 +23,4 @@ export const DEMO_USER: User = {
   createdAt: new Date(),
   email: 'demo@example.com'
 };
+
