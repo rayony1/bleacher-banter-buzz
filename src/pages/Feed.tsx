@@ -1,193 +1,47 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
 import { FeedType } from '@/lib/types';
 import { useFeed } from '@/hooks/useFeed';
-import { checkAllPermissions } from '@/utils/iOSPermissions';
-import { initializePushNotifications } from '@/utils/pushNotifications';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { useNotificationSetup } from '@/hooks/useNotificationSetup';
+import { useNetworkListener } from '@/hooks/useNetworkListener';
+import { useCreatePostHandler } from '@/hooks/useCreatePostHandler';
+import { useToast } from '@/hooks/use-toast';
+import { cachePosts, getCachedPosts, isOnline } from '@/utils/offlineCache';
+
+// Components
 import IOSFeedHeader from '@/components/feed/IOSFeedHeader';
-import FeedTabs from '@/components/feed/FeedTabs';
-import CreatePostForm from '@/components/feed/CreatePostForm';
-import { useToast, toast } from '@/hooks/use-toast';
 import FeedHeader from '@/components/feed/FeedHeader';
-import FeedLoadingState from '@/components/feed/FeedLoadingState';
-import FeedErrorState from '@/components/feed/FeedErrorState';
+import FeedTabs from '@/components/feed/FeedTabs';
 import FeedContent from '@/components/feed/FeedContent';
 import FloatingCreateButton from '@/components/feed/FloatingCreateButton';
 import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
+import FeedLoadingState from '@/components/feed/FeedLoadingState';
+import FeedErrorState from '@/components/feed/FeedErrorState';
 import NotificationPermission from '@/components/notifications/NotificationPermission';
-import { createPost } from '@/lib/supabase';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { 
-  cachePosts, 
-  getCachedPosts, 
-  queueOfflinePost, 
-  getOfflineQueue,
-  removeFromOfflineQueue,
-  initNetworkListener, 
-  isOnline 
-} from '@/utils/offlineCache';
+import PostDialog from '@/components/feed/PostDialog';
 
 const Feed = () => {
   const { isMobile } = useMobile();
   const navigate = useNavigate();
   const { user, isLoading: isUserLoading } = useAuth();
+  const { toast } = useToast();
   const [filter, setFilter] = useState<FeedType>('school');
   const [createPostOpen, setCreatePostOpen] = useState(false);
-  const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [networkStatus, setNetworkStatus] = useState<boolean>(true);
-  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   
-  // Check network status on component mount
-  useEffect(() => {
-    const checkNetworkStatus = async () => {
-      const online = await isOnline();
-      setNetworkStatus(online);
-    };
-    
-    checkNetworkStatus();
-  }, []);
-  
-  // Set up network listener
-  useEffect(() => {
-    // Initialize the network listener (returns a cleanup function directly)
-    const cleanup = initNetworkListener(
-      // Online callback
-      () => {
-        setNetworkStatus(true);
-        toast({
-          title: "You're back online",
-          description: "Your feed will now update with the latest posts"
-        });
-        
-        // Process any offline posts
-        syncOfflinePosts();
-        refreshPosts();
-      },
-      // Offline callback
-      () => {
-        setNetworkStatus(false);
-        toast({
-          title: "You're offline",
-          description: "You can still view cached content and create posts",
-          variant: "destructive"
-        });
-      }
-    );
-    
-    // Return the cleanup function
-    return cleanup;
-  }, []);
-  
-  // Sync offline posts when we come back online
-  const syncOfflinePosts = async () => {
-    if (!user) return;
-    
-    try {
-      const offlinePosts = await getOfflineQueue();
-      if (offlinePosts.length === 0) return;
-      
-      toast({
-        title: "Syncing posts",
-        description: `Uploading ${offlinePosts.length} offline post(s)`
-      });
-      
-      for (const post of offlinePosts) {
-        try {
-          await createPost(
-            post.content, 
-            user.school, 
-            user.id, 
-            post.isAnonymous, 
-            post.imageUrl ? [post.imageUrl] : undefined
-          );
-          
-          // Remove the post from the offline queue
-          await removeFromOfflineQueue(post.createdAt);
-        } catch (error) {
-          console.error('Error syncing offline post:', error);
-        }
-      }
-      
-      toast({
-        title: "Posts synced",
-        description: "Your offline posts have been uploaded"
-      });
-      
-      // Refresh the feed to show the new posts
-      refreshPosts();
-    } catch (error) {
-      console.error('Error syncing offline posts:', error);
-      toast({
-        title: "Sync failed",
-        description: "Failed to upload some offline posts",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Set up push notifications
-  useEffect(() => {
-    let cleanupNotifications: (() => void) | undefined;
-    
-    const setupNotifications = async () => {
-      if (!user || !user.id || user.id === 'demo-user-id' || process.env.NODE_ENV === 'development') {
-        console.log('Skipping push notification setup for demo user or development');
-        return;
-      }
-      
-      try {
-        cleanupNotifications = await initializePushNotifications(user.id);
-        
-        // Show notification prompt after a delay
-        setTimeout(() => {
-          // Only show if we haven't shown it before
-          const hasShownPrompt = localStorage.getItem('notification_prompt_shown');
-          if (!hasShownPrompt) {
-            setShowNotificationPrompt(true);
-            localStorage.setItem('notification_prompt_shown', 'true');
-          }
-        }, 5000);
-      } catch (error) {
-        console.error('Error setting up push notifications:', error);
-      }
-    };
-    
-    if (user) {
-      setupNotifications();
-    }
-    
-    return () => {
-      if (cleanupNotifications) {
-        cleanupNotifications();
-      }
-    };
-  }, [user]);
-  
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (process.env.NODE_ENV === 'production') {
-        await checkAllPermissions();
-      }
-    };
-    
-    checkPermissions();
-  }, []);
-  
+  // Redirect if not logged in
   useEffect(() => {
     if (!isUserLoading && !user && process.env.NODE_ENV !== 'development') {
       navigate('/auth');
     }
   }, [user, isUserLoading, navigate]);
   
+  // Get feed data
   const {
     posts,
     isLoading,
@@ -198,79 +52,30 @@ const Feed = () => {
     deletePost
   } = useFeed(filter);
   
+  // Handle offline functionality
+  const { networkStatus, setNetworkStatus, syncOfflinePosts } = useOfflineSync(user, refreshPosts);
+  
+  // Set up network status listener
+  useNetworkListener(setNetworkStatus, syncOfflinePosts, refreshPosts);
+  
+  // Set up notifications
+  const { 
+    showNotificationPrompt, 
+    handleNotificationResponse 
+  } = useNotificationSetup(user);
+  
+  // Handle post creation
+  const { 
+    handleCreatePost, 
+    isCreatingPost 
+  } = useCreatePostHandler(user, refreshPosts, () => setCreatePostOpen(false));
+  
   // Cache posts when they change
   useEffect(() => {
     if (posts && posts.length > 0) {
       cachePosts(posts, filter);
     }
   }, [posts, filter]);
-  
-  const handleCreatePost = async (content: string, imageUrl?: string) => {
-    if (!user) {
-      toast({
-        title: "Not authorized",
-        description: "You must be logged in to create a post",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      setIsCreatingPost(true);
-      
-      if (!user.id || user.id === 'demo-user-id' || process.env.NODE_ENV === 'development') {
-        setTimeout(() => {
-          setCreatePostOpen(false);
-          toast({
-            title: "Demo mode",
-            description: "Post creation simulated in demo mode"
-          });
-          refreshPosts();
-        }, 1000);
-        return;
-      }
-      
-      // Check if we're online
-      const online = await isOnline();
-      
-      if (!online) {
-        // Queue post for later if offline
-        await queueOfflinePost({
-          content,
-          imageUrl,
-          isAnonymous: false,
-          createdAt: new Date().toISOString()
-        });
-        
-        setCreatePostOpen(false);
-        toast({
-          title: "Post saved",
-          description: "Your post will be uploaded when you're back online"
-        });
-        setIsCreatingPost(false);
-        return;
-      }
-      
-      await createPost(content, user.school, user.id, false, imageUrl ? [imageUrl] : undefined);
-      
-      setCreatePostOpen(false);
-      toast({
-        title: "Post created!",
-        description: "Your post has been published"
-      });
-      
-      refreshPosts();
-    } catch (err) {
-      console.error('Error creating post:', err);
-      toast({
-        title: "Error",
-        description: "Failed to create your post",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreatingPost(false);
-    }
-  };
   
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -293,11 +98,6 @@ const Feed = () => {
     }
     
     setIsRefreshing(false);
-  };
-  
-  const handleNotificationResponse = (granted: boolean) => {
-    setShowNotificationPrompt(false);
-    console.log('Notification permission response:', granted);
   };
   
   if (isUserLoading || (isLoading && !posts.length)) {
@@ -347,18 +147,13 @@ const Feed = () => {
       
       <FloatingCreateButton onClick={() => setCreatePostOpen(true)} />
       
-      <Dialog open={createPostOpen} onOpenChange={setCreatePostOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Create a post</DialogTitle>
-          </DialogHeader>
-          <CreatePostForm 
-            onSubmit={handleCreatePost} 
-            isSubmitting={isCreatingPost} 
-            isOffline={!networkStatus}
-          />
-        </DialogContent>
-      </Dialog>
+      <PostDialog
+        open={createPostOpen}
+        onOpenChange={setCreatePostOpen}
+        onSubmit={handleCreatePost}
+        isSubmitting={isCreatingPost}
+        isOffline={!networkStatus}
+      />
       
       {isMobile && <BottomNav />}
       {!isMobile && <Footer />}
