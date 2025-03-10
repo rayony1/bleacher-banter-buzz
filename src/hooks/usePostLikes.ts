@@ -56,29 +56,35 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     checkLikeStatus();
   }, [postId, user]);
 
-  // Subscribe to changes in the post_likes table for this post
+  // Subscribe to real-time changes
   useEffect(() => {
     if (!postId) return;
     
     const channel = supabase
       .channel(`post_likes:${postId}`)
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'post_likes',
-        filter: `post_id=eq.${postId}` 
-      }, async (payload: RealtimePostLikePayload) => {
-        // Update likes count after any change
-        const { count, error } = await getLikesCount(postId);
-        if (!error && count !== null) {
-          setLikesCount(count);
+      .on(
+        'postgres_changes' as const,
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'post_likes',
+          filter: `post_id=eq.${postId}` 
+        }, 
+        async (payload: RealtimePostLikePayload) => {
+          // Update likes count after any change
+          const { count, error } = await getLikesCount(postId);
+          if (!error && count !== null) {
+            setLikesCount(count);
+          }
+          
+          // Update liked status if the user is the one who liked/unliked
+          if (user && payload.new && payload.new.user_id === user.id) {
+            setLiked(true);
+          } else if (user && payload.old && payload.old.user_id === user.id) {
+            setLiked(false);
+          }
         }
-        
-        // Update liked status if the user is the one who liked/unliked
-        if (user && payload.new && payload.new.user_id === user.id) {
-          setLiked(payload.eventType !== 'DELETE');
-        }
-      })
+      )
       .subscribe();
     
     return () => {
