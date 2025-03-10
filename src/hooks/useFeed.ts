@@ -5,7 +5,11 @@ import { usePostActions } from './feed/usePostActions';
 import { FeedType } from '@/lib/types';
 import { UseFeedReturn } from './feed/types';
 
-export const useFeed = (feedType: FeedType): UseFeedReturn => {
+export const useFeed = (
+  feedType: FeedType,
+  userId: string = '',
+  userSchool: string = ''
+): UseFeedReturn => {
   // Get posts with loading and error states
   const { 
     posts, 
