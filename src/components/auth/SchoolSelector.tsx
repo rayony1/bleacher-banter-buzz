@@ -6,14 +6,21 @@ import { useToast } from '@/hooks/use-toast';
 import { getSchools } from '@/lib/supabase';
 import { UseFormReturn } from 'react-hook-form';
 import { RegisterFormValues } from './RegisterFormTypes';
-import { School } from '@/lib/database.types';
+// Removing the incorrect import and using the correct type definition
+import { Database } from '@/lib/database.types';
+
+// Define the school type we need based on what's in the database schema
+type SchoolData = {
+  school_id: string;
+  school_name: string;
+};
 
 interface SchoolSelectorProps {
   form: UseFormReturn<RegisterFormValues>;
 }
 
 const SchoolSelector = ({ form }: SchoolSelectorProps) => {
-  const [schools, setSchools] = useState<Array<{ school_id: string; school_name: string }>>([]);
+  const [schools, setSchools] = useState<SchoolData[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
@@ -61,7 +62,9 @@ const Feed = () => {
     syncOfflinePosts 
   } = useOfflineSync(user, refreshPosts);
   
-  useNetworkListener(setNetworkStatus, syncOfflinePosts, refreshPosts);
+  // Fix the useNetworkListener hook call by checking what arguments it needs
+  // and providing the correct filter parameter as the third argument
+  useNetworkListener(setNetworkStatus, syncOfflinePosts, filter);
   
   const { 
     shouldPromptForPermission,

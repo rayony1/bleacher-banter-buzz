@@ -52,3 +52,41 @@ export const registerUser = async (
     };
   }
 };
+
+// Add the missing registerWithSchool function
+export const registerWithSchool = async (
+  email: string, 
+  password: string, 
+  username: string, 
+  schoolId: string
+): Promise<{ error: Error | null }> => {
+  try {
+    console.log('Registering user with school data:', { 
+      email, 
+      username, 
+      schoolId 
+    });
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          school_id: schoolId,
+        },
+      },
+    });
+
+    if (error) throw error;
+
+    console.log('Registration with school successful:', data);
+    
+    return { error: null };
+  } catch (err) {
+    console.error('Registration with school error:', err);
+    return { 
+      error: err instanceof Error ? err : new Error('Failed to register user with school')
+    };
+  }
+};
