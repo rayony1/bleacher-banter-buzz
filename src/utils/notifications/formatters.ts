@@ -14,12 +14,15 @@ export const processNotificationData = (data: any): {
   let body = 'You have a new notification';
   
   if (data) {
+    // Extract type and ID from notification data
     type = data.type || type;
     targetId = data.postId || data.gameId || data.predictionId || targetId;
     
+    // Use provided title and body if available
     if (data.title) title = data.title;
     if (data.body) body = data.body;
     
+    // Generate default title and body based on notification type if not provided
     if (!data.title) {
       switch (type) {
         case 'like':

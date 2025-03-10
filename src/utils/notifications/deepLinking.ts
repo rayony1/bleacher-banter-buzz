@@ -1,6 +1,6 @@
 
 import { Capacitor } from '@capacitor/core';
-import { AppLauncher } from '@capacitor/app-launcher';
+import { Browser } from '@capacitor/browser';
 
 /**
  * Handle deep linking to specific content based on notification type
@@ -29,13 +29,15 @@ export const handleDeepLink = async (type: string, targetId: string): Promise<vo
         appUrl = 'bleacher-banter-buzz://feed';
     }
     
-    await AppLauncher.openUrl({ url: appUrl });
+    // Use Browser.open instead of AppLauncher as it's more widely supported
+    await Browser.open({ url: appUrl });
     
   } catch (error) {
     console.error('Error handling deep link:', error);
     
     try {
-      await AppLauncher.openUrl({ url: 'bleacher-banter-buzz://feed' });
+      // Fallback to main app URL
+      await Browser.open({ url: 'bleacher-banter-buzz://feed' });
     } catch (fallbackError) {
       console.error('Failed to open fallback deep link:', fallbackError);
     }
