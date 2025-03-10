@@ -13,15 +13,37 @@ import PostComments from './PostComments';
 const PostCard = ({ post, onLike, onUnlike, disableInteractions = false, onDelete }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const { user } = useAuth();
-  const { liked, likesCount, isLoading, toggleLike } = usePostLikes(post.id, post.likes || 0);
+  
+  // Check if post ID is a UUID (for handling demo posts differently)
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(post.id);
+  
+  // Only use real-time likes for UUID posts
+  const { liked, likesCount, isLoading, toggleLike } = 
+    isUUID 
+      ? usePostLikes(post.id, post.likes || 0)
+      : { liked: false, likesCount: post.likes || 0, isLoading: false, toggleLike: () => {} };
   
   const handleLike = () => {
     if (disableInteractions || isLoading) return;
-    toggleLike();
+    
+    if (isUUID) {
+      toggleLike();
+    } else {
+      // For demo posts, just use the regular like/unlike functions
+      if (liked) {
+        onUnlike(post.id);
+      } else {
+        onLike(post.id);
+      }
+    }
   };
   
   const handleDelete = (postId: string) => {
     if (onDelete) {
+      if (!isUUID) {
+        console.log('Demo mode: Cannot delete non-UUID post');
+        return;
+      }
       onDelete(postId);
     }
   };

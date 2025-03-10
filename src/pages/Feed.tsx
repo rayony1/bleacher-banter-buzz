@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -28,7 +27,8 @@ const Feed = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    // Only navigate to auth if not in development mode
+    if (!isUserLoading && !user && process.env.NODE_ENV !== 'development') {
       navigate('/auth');
     }
   }, [user, isUserLoading, navigate]);
@@ -55,6 +55,19 @@ const Feed = () => {
     
     try {
       setIsCreatingPost(true);
+      
+      // Just show a toast for demo users or development mode
+      if (!user.id || user.id === 'demo-user-id' || process.env.NODE_ENV === 'development') {
+        setTimeout(() => {
+          setCreatePostOpen(false);
+          toast({
+            title: "Demo mode",
+            description: "Post creation simulated in demo mode"
+          });
+          refreshPosts();
+        }, 1000);
+        return;
+      }
       
       // Create post in Supabase
       await createPost(content, user.school, user.id, false, imageUrl ? [imageUrl] : undefined);
@@ -90,13 +103,13 @@ const Feed = () => {
     });
   };
   
-  if (isUserLoading || (isLoading && !posts)) {
-    return (
-      <FeedLoadingState filter={filter} onTabChange={setFilter} />
-    );
+  // Show loading state while waiting for user or posts
+  if (isUserLoading || (isLoading && !posts.length)) {
+    return <FeedLoadingState filter={filter} onTabChange={setFilter} />;
   }
   
-  if (error) {
+  // Never show error state in development mode
+  if (error && process.env.NODE_ENV !== 'development') {
     return <FeedErrorState />;
   }
   

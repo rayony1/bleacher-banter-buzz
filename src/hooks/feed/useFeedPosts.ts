@@ -15,19 +15,15 @@ export const useFeedPosts = (feedType: FeedType) => {
 
   // Function to fetch posts from Supabase
   const fetchPosts = async () => {
-    if (!user) {
-      // Use sample posts when no user is available (demo mode)
-      setPosts(SAMPLE_POSTS[feedType] || []);
-      return;
-    }
-    
     try {
       setIsLoading(true);
       setError(null);
       
-      // For demo posts shown in development or when no user is available
-      if (process.env.NODE_ENV === 'development' && !user.id) {
+      // For demo mode or when not logged in, always use sample posts
+      if (!user || !user.id || user.id === 'demo-user-id' || process.env.NODE_ENV === 'development') {
+        console.log('Using sample posts for feed type:', feedType);
         setPosts(SAMPLE_POSTS[feedType] || []);
+        setIsLoading(false);
         return;
       }
       
@@ -37,26 +33,23 @@ export const useFeedPosts = (feedType: FeedType) => {
       
       if (error) {
         console.error('Supabase error fetching posts:', error);
-        throw error;
-      }
-      
-      if (data) {
+        // Don't throw here, just set the error state and use sample posts
+        setError(new Error(`Failed to fetch posts: ${error.message}`));
+        setPosts(SAMPLE_POSTS[feedType] || []);
+      } else if (data && data.length > 0) {
         console.log('Posts data received:', data);
         // Map the DB posts to our Post type
         const mappedPosts = data.map(mapDbPostToPost);
         setPosts(mappedPosts);
       } else {
-        console.log('No posts data returned');
-        // Fallback to sample posts if no data is returned
+        console.log('No posts data returned, using sample posts');
         setPosts(SAMPLE_POSTS[feedType] || []);
       }
     } catch (err) {
       console.error('Error fetching posts:', err);
       setError(err instanceof Error ? err : new Error('Failed to fetch posts'));
-      // Fallback to sample posts if there's an error in development
-      if (process.env.NODE_ENV === 'development') {
-        setPosts(SAMPLE_POSTS[feedType] || []);
-      }
+      // Fallback to sample posts if there's an error
+      setPosts(SAMPLE_POSTS[feedType] || []);
     } finally {
       setIsLoading(false);
     }
@@ -64,12 +57,7 @@ export const useFeedPosts = (feedType: FeedType) => {
   
   // Fetch posts when feed type changes or user changes
   useEffect(() => {
-    if (user) {
-      fetchPosts();
-    } else {
-      // Use sample posts when no user is available (demo mode)
-      setPosts(SAMPLE_POSTS[feedType] || []);
-    }
+    fetchPosts();
   }, [feedType, user]);
 
   return {

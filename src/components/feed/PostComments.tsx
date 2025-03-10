@@ -22,6 +22,9 @@ const PostComments = ({
   const { toast } = useToast();
   const { user } = useAuth();
   
+  // Skip loading comments for non-UUID post IDs (demo data)
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(postId);
+  
   const { 
     comments, 
     isLoading: isLoadingComments, 
@@ -38,6 +41,16 @@ const PostComments = ({
       toast({
         title: "Authentication required",
         description: "Please sign in to comment on posts",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Demo mode or development mode with non-UUID post IDs
+    if (!isUUID) {
+      toast({
+        title: "Demo mode",
+        description: "Comments are disabled in demo mode",
         variant: "destructive"
       });
       return;
@@ -71,8 +84,8 @@ const PostComments = ({
 
   if (!showComments) return null;
   
-  if (error) {
-    console.error('Comments error:', error);
+  if (error && !isUUID) {
+    console.log('Demo mode: Using mock data for non-UUID post ID');
   }
   
   return (
@@ -83,7 +96,7 @@ const PostComments = ({
       setCommentText={setCommentText}
       handleSubmitComment={handleSubmitComment}
       isCreatingComment={isCreatingComment}
-      disableInteractions={disableInteractions}
+      disableInteractions={disableInteractions || !isUUID}
       showUser={userLoggedIn}
     />
   );
