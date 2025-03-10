@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface NotificationEvent {
   detail: {
@@ -58,10 +59,11 @@ const InAppNotificationListener = () => {
         title,
         description: body,
         duration: 5000,
-        action: type !== 'generic' ? {
-          label: "View",
-          onClick: handleToastAction
-        } : undefined,
+        action: type !== 'generic' ? (
+          <Button variant="outline" size="sm" onClick={handleToastAction}>
+            View
+          </Button>
+        ) : undefined,
       });
     };
     
