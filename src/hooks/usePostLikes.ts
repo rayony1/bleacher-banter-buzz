@@ -4,20 +4,17 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase/client';
 import { checkIfPostLiked, getLikesCount, likePost, unlikePost } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-type RealtimePostLikePayload = {
-  new: {
-    user_id: string;
-    post_id: string;
-    created_at?: string;
-  } | null;
-  old: {
-    user_id: string;
-    post_id: string;
-    created_at?: string;
-  } | null;
-  eventType: 'INSERT' | 'DELETE' | 'UPDATE';
+// Type for the realtime payload we'll receive from Supabase
+type PostLikeChange = {
+  user_id: string;
+  post_id: string;
+  created_at?: string;
 };
+
+// Type for Postgres changes payload
+type PostLikeChangesPayload = RealtimePostgresChangesPayload<PostLikeChange>;
 
 export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const [liked, setLiked] = useState(false);
@@ -60,29 +57,34 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   useEffect(() => {
     if (!postId) return;
     
-    const channel = supabase.channel(`post_likes:${postId}`);
+    // Create a channel with proper naming convention
+    const channel = supabase.channel(`post-likes-${postId}`);
     
-    // Subscribe to changes in the post_likes table for this post
+    // Set up the subscription using the correct pattern
     channel
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'post_likes',
-        filter: `post_id=eq.${postId}`
-      }, async (payload: RealtimePostLikePayload) => {
-        // Update like count
-        const { count, error } = await getLikesCount(postId);
-        if (!error && count !== null) {
-          setLikesCount(count);
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'post_likes',
+          filter: `post_id=eq.${postId}`
+        },
+        async (payload: PostLikeChangesPayload) => {
+          // Update like count
+          const { count, error } = await getLikesCount(postId);
+          if (!error && count !== null) {
+            setLikesCount(count);
+          }
+          
+          // Update liked status if it's the current user
+          if (user && payload.new && payload.new.user_id === user.id) {
+            setLiked(true);
+          } else if (user && payload.old && payload.old.user_id === user.id) {
+            setLiked(false);
+          }
         }
-        
-        // Update liked status if it's the current user
-        if (user && payload.new && payload.new.user_id === user.id) {
-          setLiked(true);
-        } else if (user && payload.old && payload.old.user_id === user.id) {
-          setLiked(false);
-        }
-      })
+      )
       .subscribe();
     
     return () => {
