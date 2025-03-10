@@ -1,9 +1,22 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase/client';
 import { checkIfPostLiked, getLikesCount, likePost, unlikePost } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+
+type RealtimePostLikePayload = {
+  new: {
+    user_id: string;
+    post_id: string;
+    created_at?: string;
+  } | null;
+  old: {
+    user_id: string;
+    post_id: string;
+    created_at?: string;
+  } | null;
+  eventType: 'INSERT' | 'DELETE' | 'UPDATE';
+};
 
 export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const [liked, setLiked] = useState(false);
@@ -47,15 +60,14 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   useEffect(() => {
     if (!postId) return;
     
-    // Subscribe to changes in this post's likes
-    const subscription = supabase
+    const channel = supabase
       .channel(`post_likes:${postId}`)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
         table: 'post_likes',
         filter: `post_id=eq.${postId}` 
-      }, async (payload) => {
+      }, async (payload: RealtimePostLikePayload) => {
         // Update likes count after any change
         const { count, error } = await getLikesCount(postId);
         if (!error && count !== null) {
@@ -70,7 +82,7 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
       .subscribe();
     
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [postId, user]);
 
