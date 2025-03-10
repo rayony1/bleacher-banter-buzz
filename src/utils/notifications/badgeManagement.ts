@@ -1,6 +1,7 @@
 
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 /**
  * Update app badge count
@@ -16,10 +17,20 @@ export const updateBadgeCount = async (notificationType: string): Promise<void> 
     
     // Update device badge if on native platform
     if (Capacitor.isNativePlatform()) {
-      // PushNotifications plugin doesn't have setBadgeCount directly
-      // We'll use removeAllDeliveredNotifications as a workaround
-      await PushNotifications.removeAllDeliveredNotifications();
+      if (Capacitor.getPlatform() === 'ios') {
+        // For iOS, we can set the badge count directly
+        await PushNotifications.removeAllDeliveredNotifications();
+        const badgePlugin = (PushNotifications as any).setBadgeCount;
+        if (typeof badgePlugin === 'function') {
+          await badgePlugin({ count: newBadgeCount });
+        }
+      } else {
+        // For Android, just clear notifications
+        await PushNotifications.removeAllDeliveredNotifications();
+      }
     }
+    
+    console.log(`Badge count updated to ${newBadgeCount}`);
   } catch (error) {
     console.error('Error updating badge count:', error);
   }
@@ -35,11 +46,19 @@ export const clearBadgeCount = async (): Promise<void> => {
     
     // Clear device badge if on native platform
     if (Capacitor.isNativePlatform()) {
-      // PushNotifications plugin doesn't have setBadgeCount directly
-      // We'll use removeAllDeliveredNotifications as a workaround
+      if (Capacitor.getPlatform() === 'ios') {
+        // For iOS, we can set the badge count directly to zero
+        const badgePlugin = (PushNotifications as any).setBadgeCount;
+        if (typeof badgePlugin === 'function') {
+          await badgePlugin({ count: 0 });
+        }
+      }
+      
+      // For all platforms, clear notifications
       await PushNotifications.removeAllDeliveredNotifications();
-      await PushNotifications.removeAllListeners();
     }
+    
+    console.log('Badge count cleared');
   } catch (error) {
     console.error('Error clearing badge count:', error);
   }
