@@ -8,10 +8,17 @@ import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // Type for the realtime payload we'll receive from Supabase
 interface PostLikeChange {
+  id?: string;
   user_id: string;
   post_id: string;
   created_at?: string;
 }
+
+// Add this type definition for the payload
+type RealtimePostLikePayload = RealtimePostgresChangesPayload<{
+  new: PostLikeChange;
+  old: PostLikeChange;
+}>
 
 export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const [liked, setLiked] = useState(false);
@@ -57,7 +64,7 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     // Create a channel with proper naming convention
     const channel = supabase.channel(`post-likes-${postId}`);
     
-    // Set up the subscription using the correct pattern
+    // Set up the subscription using the correct pattern with proper typing
     channel
       .on(
         'postgres_changes',
@@ -67,7 +74,7 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
           table: 'post_likes',
           filter: `post_id=eq.${postId}`
         },
-        (payload: RealtimePostgresChangesPayload<PostLikeChange>) => {
+        (payload: RealtimePostLikePayload) => {
           // Get updated like count
           getLikesCount(postId).then(({ count, error }) => {
             if (!error && count !== null) {
@@ -76,9 +83,9 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
           });
           
           // Update liked status if it's the current user
-          if (user && payload.new && 'user_id' in payload.new && payload.new.user_id === user.id) {
+          if (user && payload.new && payload.new.user_id === user.id) {
             setLiked(true);
-          } else if (user && payload.old && 'user_id' in payload.old && payload.old.user_id === user.id) {
+          } else if (user && payload.old && payload.old.user_id === user.id) {
             setLiked(false);
           }
         }
