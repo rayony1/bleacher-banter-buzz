@@ -27,7 +27,6 @@ const Feed = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   useEffect(() => {
-    // Only navigate to auth if not in development mode
     if (!isUserLoading && !user && process.env.NODE_ENV !== 'development') {
       navigate('/auth');
     }
@@ -56,7 +55,6 @@ const Feed = () => {
     try {
       setIsCreatingPost(true);
       
-      // Just show a toast for demo users or development mode
       if (!user.id || user.id === 'demo-user-id' || process.env.NODE_ENV === 'development') {
         setTimeout(() => {
           setCreatePostOpen(false);
@@ -69,7 +67,6 @@ const Feed = () => {
         return;
       }
       
-      // Create post in Supabase
       await createPost(content, user.school, user.id, false, imageUrl ? [imageUrl] : undefined);
       
       setCreatePostOpen(false);
@@ -78,7 +75,6 @@ const Feed = () => {
         description: "Your post has been published"
       });
       
-      // Refresh the feed to show the new post
       refreshPosts();
     } catch (err) {
       console.error('Error creating post:', err);
@@ -103,14 +99,12 @@ const Feed = () => {
     });
   };
   
-  // Show loading state while waiting for user or posts
   if (isUserLoading || (isLoading && !posts.length)) {
     return <FeedLoadingState filter={filter} onTabChange={setFilter} />;
   }
   
-  // Never show error state in development mode
   if (error && process.env.NODE_ENV !== 'development') {
-    return <FeedErrorState />;
+    return <FeedErrorState error={error} onRetry={refreshPosts} />;
   }
   
   return (
