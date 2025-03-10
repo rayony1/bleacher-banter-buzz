@@ -10,13 +10,26 @@ interface FeedContentProps {
   onUnlike: (postId: string) => void;
   onCreatePost: () => void;
   onDeletePost?: (postId: string) => void;
+  isOffline?: boolean;
 }
 
-const FeedContent = ({ posts, onLike, onUnlike, onCreatePost, onDeletePost }: FeedContentProps) => {
+const FeedContent = ({ 
+  posts, 
+  onLike, 
+  onUnlike, 
+  onCreatePost, 
+  onDeletePost,
+  isOffline = false
+}: FeedContentProps) => {
   return (
     <div className="max-w-[600px] mx-auto">
       {posts && posts.length > 0 ? (
         <div className="space-y-4 p-4">
+          {isOffline && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 p-3 rounded-lg text-sm mb-4">
+              You're viewing cached content while offline. Some interactions may be limited.
+            </div>
+          )}
           {posts.map((post: Post) => (
             <PostCard 
               key={post.id} 
@@ -24,12 +37,12 @@ const FeedContent = ({ posts, onLike, onUnlike, onCreatePost, onDeletePost }: Fe
               onLike={onLike} 
               onUnlike={onUnlike}
               onDelete={onDeletePost}
-              disableInteractions={false}
+              disableInteractions={isOffline}
             />
           ))}
         </div>
       ) : (
-        <FeedEmptyState onCreatePost={onCreatePost} />
+        <FeedEmptyState onCreatePost={onCreatePost} isOffline={isOffline} />
       )}
     </div>
   );

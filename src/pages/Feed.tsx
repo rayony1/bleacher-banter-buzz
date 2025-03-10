@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
@@ -5,7 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { FeedType } from '@/lib/types';
 import { useFeed } from '@/hooks/useFeed';
 import { checkAllPermissions } from '@/utils/iOSPermissions';
-import IOSFeedHeader from '@/components/feed/iOSFeedHeader';
+import IOSFeedHeader from '@/components/feed/IOSFeedHeader';
 import FeedTabs from '@/components/feed/FeedTabs';
 import CreatePostForm from '@/components/feed/CreatePostForm';
 import { useToast, toast } from '@/hooks/use-toast';
@@ -23,6 +24,13 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { 
+  cachePosts, 
+  getCachedPosts, 
+  queueOfflinePost, 
+  initNetworkListener, 
+  isOnline 
+} from '@/utils/offlineCache';
 
 const Feed = () => {
   const { isMobile } = useMobile();
@@ -32,6 +40,43 @@ const Feed = () => {
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState<boolean>(true);
+  
+  // Check network status on component mount
+  useEffect(() => {
+    const checkNetworkStatus = async () => {
+      const online = await isOnline();
+      setNetworkStatus(online);
+    };
+    
+    checkNetworkStatus();
+  }, []);
+  
+  // Set up network listener
+  useEffect(() => {
+    const cleanup = initNetworkListener(
+      // Online callback
+      () => {
+        setNetworkStatus(true);
+        toast({
+          title: "You're back online",
+          description: "Your feed will now update with the latest posts"
+        });
+        refreshPosts();
+      },
+      // Offline callback
+      () => {
+        setNetworkStatus(false);
+        toast({
+          title: "You're offline",
+          description: "You can still view cached content and create posts",
+          variant: "destructive"
+        });
+      }
+    );
+    
+    return cleanup;
+  }, []);
   
   useEffect(() => {
     const checkPermissions = async () => {
@@ -59,6 +104,13 @@ const Feed = () => {
     deletePost
   } = useFeed(filter);
   
+  // Cache posts when they change
+  useEffect(() => {
+    if (posts && posts.length > 0) {
+      cachePosts(posts, filter);
+    }
+  }, [posts, filter]);
+  
   const handleCreatePost = async (content: string, imageUrl?: string) => {
     if (!user) {
       toast({
@@ -81,6 +133,22 @@ const Feed = () => {
           });
           refreshPosts();
         }, 1000);
+        return;
+      }
+      
+      // Check if we're online
+      const online = await isOnline();
+      
+      if (!online) {
+        // Queue post for later if offline
+        queueOfflinePost({
+          content,
+          imageUrl,
+          isAnonymous: false,
+          createdAt: new Date().toISOString()
+        });
+        setCreatePostOpen(false);
+        setIsCreatingPost(false);
         return;
       }
       
@@ -107,13 +175,25 @@ const Feed = () => {
   
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refreshPosts();
-    setIsRefreshing(false);
     
-    toast({
-      title: "Feed refreshed",
-      description: "Your feed has been updated with the latest posts"
-    });
+    // Check if we're online before refreshing
+    const online = await isOnline();
+    
+    if (online) {
+      await refreshPosts();
+      toast({
+        title: "Feed refreshed",
+        description: "Your feed has been updated with the latest posts"
+      });
+    } else {
+      toast({
+        title: "You're offline",
+        description: "Using cached posts. Connect to the internet to get the latest content.",
+        variant: "destructive"
+      });
+    }
+    
+    setIsRefreshing(false);
   };
   
   if (isUserLoading || (isLoading && !posts.length)) {
@@ -127,9 +207,17 @@ const Feed = () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F5F5] dark:bg-black">
       {isMobile ? (
-        <IOSFeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+        <IOSFeedHeader 
+          isRefreshing={isRefreshing} 
+          onRefresh={handleRefresh} 
+          isOffline={!networkStatus}
+        />
       ) : (
-        <FeedHeader isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+        <FeedHeader 
+          isRefreshing={isRefreshing} 
+          onRefresh={handleRefresh} 
+          isOffline={!networkStatus}
+        />
       )}
       
       <main className="flex-1">
@@ -142,6 +230,7 @@ const Feed = () => {
             onUnlike={unlikePost} 
             onCreatePost={() => setCreatePostOpen(true)}
             onDeletePost={deletePost}
+            isOffline={!networkStatus}
           />
         </div>
       </main>
@@ -156,6 +245,7 @@ const Feed = () => {
           <CreatePostForm 
             onSubmit={handleCreatePost} 
             isSubmitting={isCreatingPost} 
+            isOffline={!networkStatus}
           />
         </DialogContent>
       </Dialog>
