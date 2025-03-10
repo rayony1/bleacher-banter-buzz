@@ -8,7 +8,7 @@ export const useNetworkListener = (
   syncOfflinePosts: () => void,
   refreshPosts: () => Promise<void>
 ) => {
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
   const toastIdRef = useRef<string | null>(null);
   
   // Set up network listener with improved reliability
@@ -21,7 +21,7 @@ export const useNetworkListener = (
       
       // Clear any existing offline toast
       if (toastIdRef.current) {
-        toast.dismiss(toastIdRef.current);
+        dismiss(toastIdRef.current);
         toastIdRef.current = null;
       }
       
@@ -76,8 +76,8 @@ export const useNetworkListener = (
       cleanup();
       // Dismiss any lingering toasts
       if (toastIdRef.current) {
-        toast.dismiss(toastIdRef.current);
+        dismiss(toastIdRef.current);
       }
     };
-  }, [setNetworkStatus, syncOfflinePosts, refreshPosts, toast]);
+  }, [setNetworkStatus, syncOfflinePosts, refreshPosts, toast, dismiss]);
 };
