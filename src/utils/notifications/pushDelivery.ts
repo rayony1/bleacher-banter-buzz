@@ -11,5 +11,8 @@ export {
   registerDeviceToken,
   removeDeviceToken,
   clearBadgeCount,
+  updateBadgeCount,
+  handleDeepLink,
+  processNotificationData,
   handleReceivedNotification
 };
