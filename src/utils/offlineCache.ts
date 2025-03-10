@@ -133,7 +133,8 @@ export const initNetworkListener = (
   onlineCallback: () => void,
   offlineCallback: () => void
 ): (() => void) => {
-  const listener = Network.addListener('networkStatusChange', (status) => {
+  // Add the network status listener
+  const listenerHandle = Network.addListener('networkStatusChange', (status) => {
     console.log('Network status changed:', status.connected);
     if (status.connected) {
       onlineCallback();
@@ -142,7 +143,9 @@ export const initNetworkListener = (
     }
   });
   
+  // Return a cleanup function that removes the listener
   return () => {
-    listener.remove();
+    // Fix: properly remove the listener
+    listenerHandle.remove();
   };
 };
