@@ -1,7 +1,7 @@
 
 import { Post } from '@/lib/types';
 import { toast } from "@/hooks/use-toast";
-import { Network } from '@capacitor/network';
+import { Network, PluginListenerHandle } from '@capacitor/network';
 
 // Type for offline post queue
 export interface OfflinePost {
@@ -108,7 +108,10 @@ export const initNetworkListener = (
   onlineCallback: () => void, 
   offlineCallback: () => void
 ): (() => void) => {
-  const listener = Network.addListener('networkStatusChange', (status) => {
+  let listener: PluginListenerHandle;
+  
+  // Create the listener and store the handle
+  Network.addListener('networkStatusChange', (status) => {
     // Save current network status
     localStorage.setItem(CACHE_KEYS.NETWORK_STATUS, status.connected ? 'online' : 'offline');
     
@@ -119,10 +122,14 @@ export const initNetworkListener = (
       console.log('Device is offline');
       offlineCallback();
     }
+  }).then(handle => {
+    listener = handle;
   });
   
   // Return a cleanup function
   return () => {
-    listener.remove();
+    if (listener) {
+      listener.remove();
+    }
   };
 };

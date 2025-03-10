@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -7,14 +6,15 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth';
 import { uploadImage } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
-import { X, Upload, ImageIcon } from 'lucide-react';
+import { X, Upload, ImageIcon, WifiOff } from 'lucide-react';
 
 interface CreatePostFormProps {
   onSubmit: (content: string, imageUrl?: string) => Promise<void>;
   isSubmitting: boolean;
+  isOffline?: boolean;
 }
 
-const CreatePostForm = ({ onSubmit, isSubmitting }: CreatePostFormProps) => {
+const CreatePostForm = ({ onSubmit, isSubmitting, isOffline = false }: CreatePostFormProps) => {
   const [content, setContent] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -25,7 +25,6 @@ const CreatePostForm = ({ onSubmit, isSubmitting }: CreatePostFormProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Validate file size (max 6MB)
     if (file.size > 6 * 1024 * 1024) {
       toast({
         title: "File too large",
@@ -35,7 +34,6 @@ const CreatePostForm = ({ onSubmit, isSubmitting }: CreatePostFormProps) => {
       return;
     }
     
-    // Validate file type
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       toast({
         title: "Invalid file type",
@@ -47,7 +45,6 @@ const CreatePostForm = ({ onSubmit, isSubmitting }: CreatePostFormProps) => {
     
     setImage(file);
     
-    // Create a preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -91,7 +88,6 @@ const CreatePostForm = ({ onSubmit, isSubmitting }: CreatePostFormProps) => {
       
       await onSubmit(content, imageUrl);
       
-      // Reset the form
       setContent('');
       setImage(null);
       setImagePreview(null);
@@ -114,6 +110,13 @@ const CreatePostForm = ({ onSubmit, isSubmitting }: CreatePostFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {isOffline && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 p-3 rounded-lg text-sm mb-4 flex items-center">
+          <WifiOff className="h-4 w-4 mr-2" />
+          <span>You're offline. Your post will be published when you're back online.</span>
+        </div>
+      )}
+      
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
