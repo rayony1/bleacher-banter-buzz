@@ -129,12 +129,12 @@ export const isOnline = async (): Promise<boolean> => {
  * @param onlineCallback Called when connection is restored
  * @param offlineCallback Called when connection is lost
  */
-export const initNetworkListener = async (
+export const initNetworkListener = (
   onlineCallback: () => void,
   offlineCallback: () => void
-): Promise<() => void> => {
-  // Get the plugin listener handle by awaiting the promise
-  const listenerHandle = await Network.addListener('networkStatusChange', (status) => {
+): () => void => {
+  // Get a reference to the promise for the listener
+  const listenerPromise = Network.addListener('networkStatusChange', (status) => {
     console.log('Network status changed:', status.connected);
     if (status.connected) {
       onlineCallback();
@@ -143,8 +143,12 @@ export const initNetworkListener = async (
     }
   });
   
-  // Return a cleanup function that removes the listener
+  // Return a cleanup function that removes the listener when the promise resolves
   return () => {
-    listenerHandle.remove();
+    listenerPromise.then(handle => {
+      handle.remove();
+    }).catch(error => {
+      console.error('Error removing network listener:', error);
+    });
   };
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMobile } from '@/hooks/use-mobile';
@@ -57,6 +56,7 @@ const Feed = () => {
   
   // Set up network listener
   useEffect(() => {
+    // Initialize the network listener (returns a cleanup function directly)
     const cleanup = initNetworkListener(
       // Online callback
       () => {
@@ -78,6 +78,7 @@ const Feed = () => {
       }
     );
     
+    // Return the cleanup function
     return cleanup;
   }, []);
   
