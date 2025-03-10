@@ -6,12 +6,28 @@ import { FeedType } from '@/lib/types';
 import { UseFeedReturn } from './feed/types';
 
 export const useFeed = (feedType: FeedType): UseFeedReturn => {
-  const { posts, setPosts, isLoading, error, refreshPosts } = useFeedPosts(feedType);
-  const { likePost, unlikePost, createPost, deletePost, isCreatingPost } = usePostActions(setPosts);
+  // Get posts with loading and error states
+  const { 
+    posts, 
+    setPosts, 
+    isLoading, 
+    error, 
+    refreshPosts 
+  } = useFeedPosts(feedType);
+  
+  // Get post actions (like, unlike, create, delete)
+  const { 
+    likePost, 
+    unlikePost, 
+    createPost, 
+    deletePost, 
+    isCreatingPost 
+  } = usePostActions(setPosts);
   
   // Set up realtime post updates
   useRealtimePosts(feedType, setPosts);
 
+  // Return everything needed by components
   return {
     posts,
     isLoading,

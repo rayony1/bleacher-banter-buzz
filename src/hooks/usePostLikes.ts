@@ -27,21 +27,24 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   
   // Helper function to check if a string is a valid UUID
   const isValidUUID = (id: string): boolean => {
+    // Don't consider null, undefined, or empty strings as valid UUIDs
+    if (!id) return false;
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(id);
   };
   
   // Check initial like status
   useEffect(() => {
+    // Skip if no user is logged in
+    if (!user || !user.id) return;
+    
+    // Skip Supabase calls for demo IDs that aren't valid UUIDs
+    if (!isValidUUID(postId)) {
+      console.log('Demo mode: Using mock data for non-UUID post ID');
+      return;
+    }
+    
     const checkLikeStatus = async () => {
-      if (!user) return;
-      
-      // Skip Supabase calls for demo IDs that aren't valid UUIDs
-      if (!isValidUUID(postId)) {
-        console.log('Demo mode: Using mock data for non-UUID post ID');
-        return;
-      }
-      
       try {
         setIsLoading(true);
         const { data, error } = await checkIfPostLiked(postId, user.id);
@@ -68,7 +71,7 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
 
   // Set up realtime subscription
   useEffect(() => {
-    if (!postId) return;
+    if (!postId || !user || !user.id) return;
     
     // Only set up Supabase realtime for valid UUIDs
     if (!isValidUUID(postId)) {
@@ -105,7 +108,9 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Realtime subscription status for post ${postId}:`, status);
+      });
     
     return () => {
       supabase.removeChannel(channel);
@@ -124,49 +129,49 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     
     if (isLoading) return;
     
+    // Optimistic UI update
+    setLiked(prev => !prev);
+    setLikesCount(prev => liked ? Math.max(0, prev - 1) : prev + 1);
+    
     try {
       setIsLoading(true);
       
-      // For demo posts with non-UUID IDs, just update the UI state
+      // For demo posts with non-UUID IDs, just update the UI state (which we already did)
       if (!isValidUUID(postId)) {
         console.log('Demo mode: Toggling like state for non-UUID post ID');
-        setLiked(prev => !prev);
-        setLikesCount(prev => liked ? Math.max(0, prev - 1) : prev + 1);
         
         toast({
-          title: liked ? "Post unliked" : "Post liked",
-          description: liked ? "You've removed your like from this post" : "You've liked this post"
+          title: !liked ? "Post liked" : "Post unliked",
+          description: !liked ? "You've liked this post" : "You've removed your like from this post"
         });
         
         setIsLoading(false);
         return;
       }
       
-      if (liked) {
-        const { error } = await unlikePost(postId, user.id);
-        if (error) throw error;
-        
-        setLiked(false);
-        setLikesCount(prev => Math.max(0, prev - 1));
-        
-        toast({
-          title: "Post unliked",
-          description: "You've removed your like from this post"
-        });
-      } else {
+      if (!liked) {
         const { error } = await likePost(postId, user.id);
         if (error) throw error;
-        
-        setLiked(true);
-        setLikesCount(prev => prev + 1);
         
         toast({
           title: "Post liked",
           description: "You've liked this post"
         });
+      } else {
+        const { error } = await unlikePost(postId, user.id);
+        if (error) throw error;
+        
+        toast({
+          title: "Post unliked",
+          description: "You've removed your like from this post"
+        });
       }
     } catch (err) {
       console.error('Error toggling like:', err);
+      // Revert optimistic update on error
+      setLiked(prev => !prev);
+      setLikesCount(prev => !liked ? Math.max(0, prev - 1) : prev + 1);
+      
       setError(err instanceof Error ? err : new Error('Failed to like/unlike post'));
       
       toast({

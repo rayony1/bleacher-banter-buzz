@@ -10,26 +10,33 @@ import PostImages from './PostImages';
 import PostInteractions from './PostInteractions';
 import PostComments from './PostComments';
 
-const PostCard = ({ post, onLike, onUnlike, disableInteractions = false, onDelete }: PostCardProps) => {
+const PostCard = ({ 
+  post, 
+  onLike, 
+  onUnlike, 
+  disableInteractions = false, 
+  onDelete 
+}: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const { user } = useAuth();
   
-  // Check if post ID is a UUID (for handling demo posts differently)
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(post.id);
+  // Helper function to check if a string is a valid UUID
+  const isUUID = (id: string): boolean => {
+    if (!id) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  };
   
-  // Only use real-time likes for UUID posts
-  const { liked, likesCount, isLoading, toggleLike } = 
-    isUUID 
-      ? usePostLikes(post.id, post.likes || 0)
-      : { liked: false, likesCount: post.likes || 0, isLoading: false, toggleLike: () => {} };
+  // Use real-time likes for all posts for better UX
+  const { liked, likesCount, isLoading, toggleLike } = usePostLikes(post.id, post.likes || 0);
   
   const handleLike = () => {
     if (disableInteractions || isLoading) return;
     
-    if (isUUID) {
-      toggleLike();
-    } else {
-      // For demo posts, just use the regular like/unlike functions
+    // Use the real-time toggle like function
+    toggleLike();
+    
+    // Also notify parent component for non-UUID posts (demo posts)
+    if (!isUUID(post.id)) {
       if (liked) {
         onUnlike(post.id);
       } else {
@@ -40,7 +47,7 @@ const PostCard = ({ post, onLike, onUnlike, disableInteractions = false, onDelet
   
   const handleDelete = (postId: string) => {
     if (onDelete) {
-      if (!isUUID) {
+      if (!isUUID(postId)) {
         console.log('Demo mode: Cannot delete non-UUID post');
         return;
       }

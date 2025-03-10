@@ -37,7 +37,7 @@ export const useRealtimePosts = (
           table: 'posts',
         },
         async (payload: RealtimePostPayload) => {
-          console.log('New post received:', payload);
+          console.log('New post event received:', payload);
           
           try {
             // For demo or non-logged-in users, just ignore realtime updates
@@ -45,15 +45,17 @@ export const useRealtimePosts = (
               return;
             }
             
-            // Fetch the new post to get full details
-            if (payload.new && payload.new.post_id) {
+            // Make sure we have a post_id before proceeding
+            if (payload.new && 'post_id' in payload.new && payload.new.post_id) {
               try {
+                const postId = payload.new.post_id;
+                
                 const { data, error } = await supabase
                   .rpc('get_feed_posts', { 
                     feed_type: feedType, 
                     user_uuid: user.id 
                   })
-                  .eq('post_id', payload.new.post_id)
+                  .eq('post_id', postId)
                   .single();
                 
                 if (error) {
@@ -75,6 +77,8 @@ export const useRealtimePosts = (
               } catch (err) {
                 console.error('Error processing realtime post:', err);
               }
+            } else {
+              console.warn('Received payload without post_id:', payload);
             }
           } catch (err) {
             console.error('Error in realtime handler:', err);
