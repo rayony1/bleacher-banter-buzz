@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { FeedType } from '@/lib/types';
 import { useFeed } from '@/hooks/useFeed';
 import { checkAllPermissions } from '@/utils/iOSPermissions';
+import { initializePushNotifications } from '@/utils/pushNotifications';
 import IOSFeedHeader from '@/components/feed/IOSFeedHeader';
 import FeedTabs from '@/components/feed/FeedTabs';
 import CreatePostForm from '@/components/feed/CreatePostForm';
@@ -17,6 +18,7 @@ import FeedContent from '@/components/feed/FeedContent';
 import FloatingCreateButton from '@/components/feed/FloatingCreateButton';
 import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
+import NotificationPermission from '@/components/notifications/NotificationPermission';
 import { createPost } from '@/lib/supabase';
 import {
   Dialog,
@@ -41,6 +43,7 @@ const Feed = () => {
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [networkStatus, setNetworkStatus] = useState<boolean>(true);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   
   // Check network status on component mount
   useEffect(() => {
@@ -77,6 +80,44 @@ const Feed = () => {
     
     return cleanup;
   }, []);
+  
+  // Set up push notifications
+  useEffect(() => {
+    let cleanupNotifications: (() => void) | undefined;
+    
+    const setupNotifications = async () => {
+      if (!user || !user.id || user.id === 'demo-user-id' || process.env.NODE_ENV === 'development') {
+        console.log('Skipping push notification setup for demo user or development');
+        return;
+      }
+      
+      try {
+        cleanupNotifications = await initializePushNotifications(user.id);
+        
+        // Show notification prompt after a delay
+        setTimeout(() => {
+          // Only show if we haven't shown it before
+          const hasShownPrompt = localStorage.getItem('notification_prompt_shown');
+          if (!hasShownPrompt) {
+            setShowNotificationPrompt(true);
+            localStorage.setItem('notification_prompt_shown', 'true');
+          }
+        }, 5000);
+      } catch (error) {
+        console.error('Error setting up push notifications:', error);
+      }
+    };
+    
+    if (user) {
+      setupNotifications();
+    }
+    
+    return () => {
+      if (cleanupNotifications) {
+        cleanupNotifications();
+      }
+    };
+  }, [user]);
   
   useEffect(() => {
     const checkPermissions = async () => {
@@ -196,6 +237,11 @@ const Feed = () => {
     setIsRefreshing(false);
   };
   
+  const handleNotificationResponse = (granted: boolean) => {
+    setShowNotificationPrompt(false);
+    console.log('Notification permission response:', granted);
+  };
+  
   if (isUserLoading || (isLoading && !posts.length)) {
     return <FeedLoadingState filter={filter} onTabChange={setFilter} />;
   }
@@ -223,6 +269,12 @@ const Feed = () => {
       <main className="flex-1">
         <div className="max-w-[600px] mx-auto">
           <FeedTabs activeTab={filter} onTabChange={(tab: FeedType) => setFilter(tab)} />
+          
+          {showNotificationPrompt && (
+            <div className="px-4 pt-4">
+              <NotificationPermission onRequestComplete={handleNotificationResponse} />
+            </div>
+          )}
           
           <FeedContent 
             posts={posts} 

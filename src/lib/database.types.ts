@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -219,6 +218,29 @@ export interface Database {
           actual_winner?: string | null;
           points?: number;
           created_at?: string;
+        };
+      };
+      user_devices: {
+        Row: {
+          user_id: string;
+          device_token: string;
+          device_type?: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          device_token: string;
+          device_type?: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Update: {
+          user_id?: string;
+          device_token?: string;
+          device_type?: string;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };
