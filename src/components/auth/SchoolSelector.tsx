@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,10 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getSchools } from '@/lib/supabase';
 import { UseFormReturn } from 'react-hook-form';
 import { RegisterFormValues } from './RegisterFormTypes';
-// Removing the incorrect import and using the correct type definition
-import { Database } from '@/lib/database.types';
 
-// Define the school type we need based on what's in the database schema
 type SchoolData = {
   school_id: string;
   school_name: string;
