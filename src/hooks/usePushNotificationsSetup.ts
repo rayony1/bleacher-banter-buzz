@@ -1,6 +1,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
-import { PushNotifications, PermissionState } from '@capacitor/push-notifications';
+import { PushNotifications, PermissionStatus } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/lib/types';
