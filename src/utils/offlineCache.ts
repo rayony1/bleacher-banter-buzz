@@ -133,7 +133,7 @@ export const initNetworkListener = (
   onlineCallback: () => void,
   offlineCallback: () => void
 ): (() => void) => {
-  // Add the network status listener
+  // The Network.addListener method returns a PluginListenerHandle directly, not a Promise
   const listenerHandle = Network.addListener('networkStatusChange', (status) => {
     console.log('Network status changed:', status.connected);
     if (status.connected) {
@@ -145,7 +145,6 @@ export const initNetworkListener = (
   
   // Return a cleanup function that removes the listener
   return () => {
-    // Fix: properly remove the listener
     listenerHandle.remove();
   };
 };
