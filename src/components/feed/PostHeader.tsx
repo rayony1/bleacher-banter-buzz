@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -10,8 +10,10 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '@/lib/auth';
 
 interface PostAuthor {
+  id?: string;
   name?: string;
   badges?: Array<{ name: string; type: string; }>;
 }
@@ -20,10 +22,21 @@ interface PostHeaderProps {
   author?: PostAuthor;
   isAnonymous: boolean;
   createdAt: Date;
+  postId: string;
+  onDelete?: (postId: string) => void;
 }
 
-const PostHeader = ({ author, isAnonymous, createdAt }: PostHeaderProps) => {
+const PostHeader = ({ author, isAnonymous, createdAt, postId, onDelete }: PostHeaderProps) => {
   const timeAgo = formatDistanceToNow(createdAt, { addSuffix: true });
+  const { user } = useAuth();
+  
+  const canDelete = !isAnonymous && author?.id === user?.id;
+  
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(postId);
+    }
+  };
   
   return (
     <div className="flex items-start justify-between mb-3">
@@ -52,6 +65,12 @@ const PostHeader = ({ author, isAnonymous, createdAt }: PostHeaderProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-xl">
+            {canDelete && (
+              <DropdownMenuItem onClick={handleDelete} className="text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/20">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete post
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem>Report</DropdownMenuItem>
             <DropdownMenuItem>Copy link</DropdownMenuItem>
             <DropdownMenuItem>Block user</DropdownMenuItem>

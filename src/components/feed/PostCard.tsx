@@ -10,7 +10,7 @@ import PostImages from './PostImages';
 import PostInteractions from './PostInteractions';
 import PostComments from './PostComments';
 
-const PostCard = ({ post, disableInteractions = false }: PostCardProps) => {
+const PostCard = ({ post, disableInteractions = false, onDelete }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const { user } = useAuth();
   const { liked, likesCount, isLoading, toggleLike } = usePostLikes(post.id, post.likes || 0);
@@ -20,13 +20,21 @@ const PostCard = ({ post, disableInteractions = false }: PostCardProps) => {
     toggleLike();
   };
   
+  const handleDelete = (postId: string) => {
+    if (onDelete) {
+      onDelete(postId);
+    }
+  };
+  
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm transition-all hover:shadow-md">
       <div className="p-4">
         <PostHeader 
           author={post.author} 
           isAnonymous={post.isAnonymous || false} 
-          createdAt={post.createdAt} 
+          createdAt={post.createdAt}
+          postId={post.id}
+          onDelete={handleDelete}
         />
         
         <PostContent content={post.content} />

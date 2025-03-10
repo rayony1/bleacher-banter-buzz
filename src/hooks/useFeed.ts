@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Post, FeedType } from '@/lib/types';
 import { supabase } from '@/lib/supabase/client';
-import { getFeedPosts } from '@/lib/supabase/posts';
+import { getFeedPosts, deletePost } from '@/lib/supabase/posts';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // Sample posts for demo
@@ -371,6 +371,53 @@ export const useFeed = (feedType: FeedType) => {
     });
   };
 
+  // Handle post deletion
+  const handleDeletePost = async (postId: string) => {
+    try {
+      setIsLoading(true);
+      
+      // For demo posts
+      if (process.env.NODE_ENV === 'development' && !user?.id) {
+        setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
+        toast({
+          title: 'Post deleted',
+          description: 'Demo mode: Your post has been deleted',
+        });
+        return;
+      }
+      
+      // Real deletion using Supabase
+      const { data, error } = await deletePost(postId);
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Remove the post from the local state
+        setPosts(currentPosts => currentPosts.filter(post => post.id !== postId));
+        
+        toast({
+          title: 'Post deleted',
+          description: 'Your post has been removed successfully',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'You can only delete your own posts',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the post',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     posts,
     isLoading,
@@ -380,5 +427,6 @@ export const useFeed = (feedType: FeedType) => {
     unlikePost,
     isCreatingPost,
     refreshPosts: fetchPosts,
+    deletePost: handleDeletePost,
   };
 };

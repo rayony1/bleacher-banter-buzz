@@ -39,7 +39,8 @@ const Feed = () => {
     error,
     likePost,
     unlikePost,
-    refreshPosts
+    refreshPosts,
+    deletePost
   } = useFeed(filter);
   
   const handleCreatePost = async (content: string, imageUrl?: string) => {
@@ -112,6 +113,7 @@ const Feed = () => {
             onLike={likePost} 
             onUnlike={unlikePost} 
             onCreatePost={() => setCreatePostOpen(true)}
+            onDeletePost={deletePost}
           />
         </div>
       </main>

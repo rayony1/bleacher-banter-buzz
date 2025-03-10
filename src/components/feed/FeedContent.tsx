@@ -9,9 +9,10 @@ interface FeedContentProps {
   onLike: (postId: string) => void;
   onUnlike: (postId: string) => void;
   onCreatePost: () => void;
+  onDeletePost?: (postId: string) => void;
 }
 
-const FeedContent = ({ posts, onLike, onUnlike, onCreatePost }: FeedContentProps) => {
+const FeedContent = ({ posts, onLike, onUnlike, onCreatePost, onDeletePost }: FeedContentProps) => {
   return (
     <div className="max-w-[600px] mx-auto">
       {posts && posts.length > 0 ? (
@@ -22,6 +23,7 @@ const FeedContent = ({ posts, onLike, onUnlike, onCreatePost }: FeedContentProps
               post={post} 
               onLike={onLike} 
               onUnlike={onUnlike}
+              onDelete={onDeletePost}
               disableInteractions={false}
             />
           ))}

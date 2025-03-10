@@ -36,3 +36,8 @@ export const getPostById = async (postId: string) => {
     .eq('post_id', postId)
     .single();
 };
+
+export const deletePost = async (postId: string) => {
+  return await supabase
+    .rpc('delete_post', { post_id_param: postId });
+};
