@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase/client';
@@ -14,10 +15,7 @@ interface PostLikeChange {
 }
 
 // Add this type definition for the payload
-type RealtimePostLikePayload = RealtimePostgresChangesPayload<{
-  new: PostLikeChange;
-  old: PostLikeChange;
-}>
+type RealtimePostLikePayload = RealtimePostgresChangesPayload<PostLikeChange>;
 
 export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const [liked, setLiked] = useState(false);
@@ -27,10 +25,22 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
+  // Helper function to check if a string is a valid UUID
+  const isValidUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+  
   // Check initial like status
   useEffect(() => {
     const checkLikeStatus = async () => {
       if (!user) return;
+      
+      // Skip Supabase calls for demo IDs that aren't valid UUIDs
+      if (!isValidUUID(postId)) {
+        console.log('Demo mode: Using mock data for non-UUID post ID');
+        return;
+      }
       
       try {
         setIsLoading(true);
@@ -59,6 +69,12 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
   // Set up realtime subscription
   useEffect(() => {
     if (!postId) return;
+    
+    // Only set up Supabase realtime for valid UUIDs
+    if (!isValidUUID(postId)) {
+      console.log('Demo mode: Skipping realtime subscription for non-UUID post ID');
+      return;
+    }
     
     // Create a channel with proper naming convention
     const channel = supabase.channel(`post-likes-${postId}`);
@@ -110,6 +126,21 @@ export const usePostLikes = (postId: string, initialLikesCount: number) => {
     
     try {
       setIsLoading(true);
+      
+      // For demo posts with non-UUID IDs, just update the UI state
+      if (!isValidUUID(postId)) {
+        console.log('Demo mode: Toggling like state for non-UUID post ID');
+        setLiked(prev => !prev);
+        setLikesCount(prev => liked ? Math.max(0, prev - 1) : prev + 1);
+        
+        toast({
+          title: liked ? "Post unliked" : "Post liked",
+          description: liked ? "You've removed your like from this post" : "You've liked this post"
+        });
+        
+        setIsLoading(false);
+        return;
+      }
       
       if (liked) {
         const { error } = await unlikePost(postId, user.id);
