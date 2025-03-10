@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Plus } from 'lucide-react';
+import { Settings, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
@@ -26,6 +26,7 @@ const Feed = () => {
   const [filter, setFilter] = useState<FeedType>('school');
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -39,6 +40,7 @@ const Feed = () => {
     error,
     likePost,
     unlikePost,
+    refreshPosts
   } = useFeed(filter);
   
   const handleCreatePost = async (content: string, imageUrl?: string) => {
@@ -54,8 +56,7 @@ const Feed = () => {
     try {
       setIsCreatingPost(true);
       
-      // If using mock data, pass to the hook
-      // In a real app, we would insert to the database
+      // Create post in Supabase
       await createPost(content, user.school, user.id, false, imageUrl ? [imageUrl] : undefined);
       
       setCreatePostOpen(false);
@@ -63,6 +64,9 @@ const Feed = () => {
         title: "Post created!",
         description: "Your post has been published"
       });
+      
+      // Refresh the feed to show the new post
+      refreshPosts();
     } catch (err) {
       console.error('Error creating post:', err);
       toast({
@@ -73,6 +77,17 @@ const Feed = () => {
     } finally {
       setIsCreatingPost(false);
     }
+  };
+  
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshPosts();
+    setIsRefreshing(false);
+    
+    toast({
+      title: "Feed refreshed",
+      description: "Your feed has been updated with the latest posts"
+    });
   };
   
   if (isUserLoading || (isLoading && !posts)) {
@@ -157,9 +172,20 @@ const Feed = () => {
         <div className="max-w-[600px] mx-auto px-4 py-3 flex justify-between items-center">
           <div className="text-xl font-bold">Bleacher Banter</div>
           
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Settings className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
       

@@ -1,8 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Post, FeedType } from '@/lib/types';
+import { supabase } from '@/lib/supabase/client';
+import { getFeedPosts } from '@/lib/supabase/posts';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // Sample posts for demo
 const SAMPLE_POSTS: Record<FeedType, Post[]> = {
@@ -170,15 +172,139 @@ const SAMPLE_POSTS: Record<FeedType, Post[]> = {
   'athletes': [] // Empty for now
 };
 
+// Add this type definition for the payload
+type RealtimePostPayload = RealtimePostgresChangesPayload<{
+  post_id: string;
+  user_id: string;
+  content: string;
+  // Add other fields as needed
+}>;
+
 export const useFeed = (feedType: FeedType) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>(SAMPLE_POSTS[feedType]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
   
-  // Update posts when feed type changes
+  // Helper function to convert DB post to Post type
+  const mapDbPostToPost = (dbPost: any): Post => {
+    return {
+      id: dbPost.post_id,
+      author: dbPost.is_anonymous ? null : {
+        id: dbPost.user_id,
+        username: dbPost.username,
+        avatar: dbPost.avatar_url,
+        badges: [],
+      },
+      content: dbPost.content,
+      timestamp: new Date(dbPost.post_timestamp),
+      createdAt: new Date(dbPost.post_timestamp),
+      isAnonymous: dbPost.is_anonymous,
+      likeCount: dbPost.likes_count,
+      commentCount: dbPost.comments_count,
+      images: dbPost.images || [],
+      schoolName: dbPost.school_name,
+      likes: dbPost.likes_count,
+      comments: dbPost.comments_count,
+    };
+  };
+
+  // Function to fetch posts from Supabase
+  const fetchPosts = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // For demo posts shown in development or when no user is available
+      if (process.env.NODE_ENV === 'development' && !user.id) {
+        setPosts(SAMPLE_POSTS[feedType]);
+        return;
+      }
+      
+      const { data, error } = await getFeedPosts(feedType, user.id);
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Map the DB posts to our Post type
+        const mappedPosts = data.map(mapDbPostToPost);
+        setPosts(mappedPosts);
+      }
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch posts'));
+      // Fallback to sample posts if there's an error in development
+      if (process.env.NODE_ENV === 'development') {
+        setPosts(SAMPLE_POSTS[feedType]);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Fetch posts when feed type changes or user changes
   useEffect(() => {
-    setPosts(SAMPLE_POSTS[feedType]);
-  }, [feedType]);
+    if (user) {
+      fetchPosts();
+    } else {
+      // Use sample posts when no user is available (demo mode)
+      setPosts(SAMPLE_POSTS[feedType]);
+    }
+  }, [feedType, user]);
+
+  // Set up realtime subscription
+  useEffect(() => {
+    if (!user) return;
+    
+    // Create a channel for posts
+    const channel = supabase.channel('public:posts');
+    
+    channel
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'posts',
+          filter: feedType === 'school' ? `school_id=eq.${user.school}` : undefined,
+        },
+        async (payload: RealtimePostPayload) => {
+          console.log('New post:', payload);
+          
+          // Fetch the new post to get full details
+          if (payload.new && 'post_id' in payload.new) {
+            const { data, error } = await supabase
+              .rpc('get_feed_posts', { 
+                feed_type: feedType, 
+                user_uuid: user.id 
+              })
+              .eq('post_id', payload.new.post_id)
+              .single();
+            
+            if (!error && data) {
+              // Add the new post to the top of the list
+              const newPost = mapDbPostToPost(data);
+              setPosts(currentPosts => [newPost, ...currentPosts]);
+              
+              // Show a toast notification
+              toast({
+                title: "New post",
+                description: "Someone just added a new post to your feed",
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+    
+    // Clean up the subscription when the component unmounts
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [feedType, user, toast]);
 
   // Demo mode - handle liking posts
   const likePost = (postId: string) => {
@@ -247,11 +373,12 @@ export const useFeed = (feedType: FeedType) => {
 
   return {
     posts,
-    isLoading: false,
-    error: null,
+    isLoading,
+    error,
     createPost,
     likePost,
     unlikePost,
-    isCreatingPost: false,
+    isCreatingPost,
+    refreshPosts: fetchPosts,
   };
 };
