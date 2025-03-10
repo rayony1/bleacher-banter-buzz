@@ -58,12 +58,12 @@ export const useNetworkListener = (
       
       // Show persistent offline toast
       if (!toastIdRef.current) {
-        const { id } = toast({
+        const id = toast({
           title: "You're offline",
           description: "You can still view cached content and create posts",
           variant: "destructive",
           duration: Infinity // Keep showing until connection is restored
-        });
+        }).id;
         toastIdRef.current = id;
       }
     };

@@ -31,25 +31,30 @@ export const isOnline = async (timeout = DEFAULT_TIMEOUT): Promise<boolean> => {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
-      // Try to fetch a tiny resource from Supabase to validate real connectivity
-      // Use cache-busting query parameter to prevent cached responses
+      // Try to fetch a tiny resource to validate real connectivity
+      // Use a simpler approach that is less likely to fail due to CORS
+      // In a real implementation, we'd use a dedicated endpoint for checking connectivity
       const response = await fetch(
-        'https://iszezjuznvucctnlqdld.supabase.co/ping?cache=' + Date.now(),
+        'https://www.google.com/favicon.ico',
         { 
           method: 'HEAD',
-          signal: controller.signal
+          signal: controller.signal,
+          mode: 'no-cors' // Avoid CORS issues with the test endpoint
         }
       );
       
       clearTimeout(timeoutId);
-      return response.ok;
+      return true; // If no error occurs, we're online regardless of response.ok (due to no-cors)
     } catch (error) {
       clearTimeout(timeoutId);
       console.warn('Network validation request failed:', error);
       
       // Still consider online if it's just a timeout but Capacitor reports connected
       // This handles cases where the test endpoint might be down but internet works
-      return error.name === 'AbortError' ? status.connected : false;
+      if (error.name === 'AbortError') {
+        return status.connected;
+      }
+      return false;
     }
   } catch (error) {
     console.error('Error checking network status:', error);
@@ -67,7 +72,7 @@ export const retryWithBackoff = async <T>(
   operation: () => Promise<T>, 
   maxRetries = MAX_RETRIES
 ): Promise<T> => {
-  let lastError: Error;
+  let lastError: Error | unknown;
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -84,7 +89,7 @@ export const retryWithBackoff = async <T>(
     }
   }
   
-  throw lastError;
+  throw lastError || new Error('Operation failed after multiple attempts');
 };
 
 /**
@@ -106,10 +111,7 @@ export const initNetworkListener = (
     
     checkingStatus = true;
     try {
-      const online = await retryWithBackoff(
-        () => isOnline(), 
-        2 // Use fewer retries for status check to be more responsive
-      );
+      const online = await isOnline();
       
       if (online !== isCurrentlyOnline) {
         isCurrentlyOnline = online;
