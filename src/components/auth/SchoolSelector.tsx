@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getSchools } from '@/lib/supabase';
 import { UseFormReturn } from 'react-hook-form';
 import { RegisterFormValues } from './RegisterFormTypes';
+import { School } from '@/lib/database.types';
 
 interface SchoolSelectorProps {
   form: UseFormReturn<RegisterFormValues>;
@@ -13,13 +14,17 @@ interface SchoolSelectorProps {
 
 const SchoolSelector = ({ form }: SchoolSelectorProps) => {
   const [schools, setSchools] = useState<Array<{ school_id: string; school_name: string }>>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchSchools = async () => {
       try {
+        setLoading(true);
         console.log('Fetching schools...');
+        
         const { data, error } = await getSchools();
+        
         if (error) {
           console.error('Error fetching schools:', error);
           toast({
@@ -27,12 +32,26 @@ const SchoolSelector = ({ form }: SchoolSelectorProps) => {
             description: error.message,
             variant: 'destructive',
           });
-        } else if (data) {
+        } else if (data && data.length > 0) {
           console.log('Schools fetched successfully:', data.length);
           setSchools(data);
+        } else {
+          // No schools found
+          console.warn('No schools found in the database');
+          setSchools([{
+            school_id: 'default',
+            school_name: 'Demo School'
+          }]);
         }
       } catch (err) {
         console.error('Exception fetching schools:', err);
+        toast({
+          title: 'Error',
+          description: 'Failed to load schools. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -48,7 +67,8 @@ const SchoolSelector = ({ form }: SchoolSelectorProps) => {
           <FormLabel>School</FormLabel>
           <Select 
             onValueChange={field.onChange} 
-            defaultValue={field.value}
+            value={field.value}
+            disabled={loading}
           >
             <FormControl>
               <SelectTrigger className="w-full">
@@ -56,7 +76,11 @@ const SchoolSelector = ({ form }: SchoolSelectorProps) => {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {schools.length > 0 ? (
+              {loading ? (
+                <SelectItem value="loading" disabled>
+                  Loading schools...
+                </SelectItem>
+              ) : schools.length > 0 ? (
                 schools.map((school) => (
                   <SelectItem 
                     key={school.school_id} 
@@ -66,8 +90,8 @@ const SchoolSelector = ({ form }: SchoolSelectorProps) => {
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="loading" disabled>
-                  Loading schools...
+                <SelectItem value="no-schools" disabled>
+                  No schools available
                 </SelectItem>
               )}
             </SelectContent>

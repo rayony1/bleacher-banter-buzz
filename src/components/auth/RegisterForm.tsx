@@ -7,6 +7,7 @@ import { Form } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { registerSchema, RegisterFormValues, RegisterFormProps } from './RegisterFormTypes';
 import RegisterFormFields from './RegisterFormFields';
+import { registerUser } from '@/lib/auth/actions';
 
 const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
   const [loading, setLoading] = useState(false);
@@ -37,14 +38,29 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
     });
     
     try {
-      toast({
-        title: 'Demo Mode',
-        description: 'Registration is simulated in demo mode.',
-      });
-      
-      if (onSuccess) onSuccess(data.email);
+      // In dev mode, use simulated registration
+      if (process.env.NODE_ENV === 'development') {
+        toast({
+          title: 'Demo Mode',
+          description: 'Registration is simulated in demo mode.',
+        });
+        
+        if (onSuccess) onSuccess(data.email);
+      } else {
+        // Real registration
+        const { error, email } = await registerUser(data);
+        
+        if (!error && email && onSuccess) {
+          onSuccess(email);
+        }
+      }
     } catch (err) {
       console.error('Exception during registration:', err);
+      toast({
+        title: "Registration error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
