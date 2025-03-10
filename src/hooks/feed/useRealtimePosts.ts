@@ -36,7 +36,7 @@ export const useRealtimePosts = (
           schema: 'public',
           table: 'posts',
         },
-        async (payload: RealtimePostPayload) => {
+        async (payload) => {
           console.log('New post event received:', payload);
           
           try {
@@ -45,40 +45,45 @@ export const useRealtimePosts = (
               return;
             }
             
-            // Make sure payload.new exists and has post_id before proceeding
-            if (payload.new && typeof payload.new === 'object' && 'post_id' in payload.new && payload.new.post_id) {
-              try {
-                const postId = payload.new.post_id;
-                
-                const { data, error } = await supabase
-                  .rpc('get_feed_posts', { 
-                    feed_type: feedType, 
-                    user_uuid: user.id 
-                  })
-                  .eq('post_id', postId)
-                  .single();
-                
-                if (error) {
-                  console.error('Error fetching new post:', error);
-                  return;
-                }
-                
-                if (data) {
-                  // Add the new post to the top of the list
-                  const newPost = mapDbPostToPost(data);
-                  setPosts(currentPosts => [newPost, ...currentPosts]);
-                  
-                  // Show a toast notification
-                  toast({
-                    title: "New post",
-                    description: "Someone just added a new post to your feed",
-                  });
-                }
-              } catch (err) {
-                console.error('Error processing realtime post:', err);
-              }
-            } else {
+            // Type guard to ensure payload.new exists and has required fields
+            if (!payload.new || typeof payload.new !== 'object') {
+              console.warn('Invalid payload received:', payload);
+              return;
+            }
+            
+            const newPost = payload.new as { post_id?: string };
+            if (!newPost.post_id) {
               console.warn('Received payload without post_id:', payload);
+              return;
+            }
+            
+            try {
+              const { data, error } = await supabase
+                .rpc('get_feed_posts', { 
+                  feed_type: feedType, 
+                  user_uuid: user.id 
+                })
+                .eq('post_id', newPost.post_id)
+                .single();
+              
+              if (error) {
+                console.error('Error fetching new post:', error);
+                return;
+              }
+              
+              if (data) {
+                // Add the new post to the top of the list
+                const mappedPost = mapDbPostToPost(data);
+                setPosts(currentPosts => [mappedPost, ...currentPosts]);
+                
+                // Show a toast notification
+                toast({
+                  title: "New post",
+                  description: "Someone just added a new post to your feed",
+                });
+              }
+            } catch (err) {
+              console.error('Error processing realtime post:', err);
             }
           } catch (err) {
             console.error('Error in realtime handler:', err);
