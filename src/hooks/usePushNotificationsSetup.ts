@@ -1,6 +1,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { PushNotifications, PermissionState } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/lib/types';
@@ -23,7 +23,9 @@ export const usePushNotificationsSetup = (user: User | null) => {
     try {
       // Check current permission status
       const permResult = await PushNotifications.checkPermissions();
-      setPermissionStatus(permResult.receive);
+      // Handle possible 'prompt-with-rationale' by converting to 'prompt'
+      const normalizedStatus = permResult.receive === 'prompt-with-rationale' ? 'prompt' : permResult.receive;
+      setPermissionStatus(normalizedStatus as 'prompt' | 'granted' | 'denied' | 'unknown');
       
       // If already granted, register for push
       if (permResult.receive === 'granted') {
@@ -47,7 +49,9 @@ export const usePushNotificationsSetup = (user: User | null) => {
     
     try {
       const permResult = await PushNotifications.requestPermissions();
-      setPermissionStatus(permResult.receive);
+      // Handle possible 'prompt-with-rationale' by converting to 'prompt'
+      const normalizedStatus = permResult.receive === 'prompt-with-rationale' ? 'prompt' : permResult.receive;
+      setPermissionStatus(normalizedStatus as 'prompt' | 'granted' | 'denied' | 'unknown');
       
       if (permResult.receive === 'granted') {
         await PushNotifications.register();
@@ -77,42 +81,51 @@ export const usePushNotificationsSetup = (user: User | null) => {
   useEffect(() => {
     if (!isPushSupported || !user) return;
     
-    // Handle registration event
-    const registrationListener = PushNotifications.addListener('registration', (token) => {
-      console.log('Push registration success, token:', token.value);
-      setPushToken(token.value);
+    // Create listener handles
+    let registrationListener: any = null;
+    let notificationListener: any = null;
+    let notificationActionListener: any = null;
+    
+    // Set up listeners
+    const setupListeners = async () => {
+      // Handle registration event
+      registrationListener = await PushNotifications.addListener('registration', (token) => {
+        console.log('Push registration success, token:', token.value);
+        setPushToken(token.value);
+        
+        // Register token with backend
+        if (user && user.id && token.value) {
+          registerDeviceToken(user.id, token.value);
+        }
+      });
       
-      // Register token with backend
-      if (user && user.id && token.value) {
-        registerDeviceToken(user.id, token.value);
-      }
-    });
+      // Handle notification received when app is in foreground
+      notificationListener = await PushNotifications.addListener(
+        'pushNotificationReceived',
+        (notification) => {
+          handleReceivedNotification(notification);
+        }
+      );
+      
+      // Handle notification clicked
+      notificationActionListener = await PushNotifications.addListener(
+        'pushNotificationActionPerformed',
+        (notification) => {
+          console.log('Push action performed:', notification.actionId);
+          handleReceivedNotification(notification.notification);
+        }
+      );
+    };
     
-    // Handle notification received when app is in foreground
-    const notificationListener = PushNotifications.addListener(
-      'pushNotificationReceived',
-      (notification) => {
-        handleReceivedNotification(notification);
-      }
-    );
-    
-    // Handle notification clicked
-    const notificationActionListener = PushNotifications.addListener(
-      'pushNotificationActionPerformed',
-      (notification) => {
-        console.log('Push action performed:', notification.actionId);
-        handleReceivedNotification(notification.notification);
-      }
-    );
-    
-    // Initialize push notifications
+    // Initialize push notifications and listeners
     initializePushNotifications();
+    setupListeners();
     
     // Clean up listeners
     return () => {
-      registrationListener.remove();
-      notificationListener.remove();
-      notificationActionListener.remove();
+      if (registrationListener) registrationListener.remove();
+      if (notificationListener) notificationListener.remove();
+      if (notificationActionListener) notificationActionListener.remove();
     };
   }, [isPushSupported, user, initializePushNotifications]);
   
