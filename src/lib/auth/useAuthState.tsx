@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { User } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { supabase, getUserProfile } from '@/lib/supabase';
-import { DEMO_USER } from './types';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -38,8 +37,8 @@ export const useAuthState = () => {
         setUserEmail(session.user.email);
         fetchUserProfile(session.user.id);
       } else {
-        // For demo mode, use the demo user
-        setUser(DEMO_USER);
+        // No active session
+        setUser(null);
         setIsLoading(false);
       }
     };
@@ -64,18 +63,20 @@ export const useAuthState = () => {
         const userProfile: User = {
           id: userId,
           username: data.username,
-          name: data.username, // In real app, get this from profile
-          school: 'Demo School', // In real app, get this from school table
-          badges: [], // In real app, fetch badges
-          points: 0, // In real app, calculate from predictions
-          isAthlete: false, // In real app, determine from role
+          name: data.username || data.full_name || 'User',
+          school: data.school_id || '', // Will be populated from school table
+          schoolName: '', // Will be populated from school name lookup
+          badges: [], // Will fetch badges later
+          points: data.points || 0,
+          isAthlete: data.is_athlete || false,
           createdAt: new Date(data.created_at),
+          email: userEmail
         };
         
         setUser(userProfile);
       } else {
-        // For demo mode, use the demo user
-        setUser(DEMO_USER);
+        // No profile exists yet
+        setUser(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch user profile'));
@@ -84,8 +85,8 @@ export const useAuthState = () => {
         description: "Could not load your profile. Please try again later.",
         variant: "destructive"
       });
-      // For demo mode, use the demo user
-      setUser(DEMO_USER);
+      // Authentication error
+      setUser(null);
     } finally {
       setIsLoading(false);
     }

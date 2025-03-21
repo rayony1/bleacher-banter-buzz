@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { registerSchema, RegisterFormValues, RegisterFormProps } from './RegisterFormTypes';
 import RegisterFormFields from './RegisterFormFields';
 import { registerUser } from '@/lib/auth/actions';
+import { supabase } from '@/lib/supabase/client';
 
 const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
   const [loading, setLoading] = useState(false);
@@ -38,20 +39,56 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
     });
     
     try {
-      // In dev mode, use simulated registration
-      if (process.env.NODE_ENV === 'development') {
+      // Use real Supabase registration
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            username: data.username,
+            school_id: data.schoolId
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Error during registration:', error.message);
         toast({
-          title: 'Demo Mode',
-          description: 'Registration is simulated in demo mode.',
+          title: 'Registration failed',
+          description: error.message,
+          variant: 'destructive'
         });
+        return;
+      }
+      
+      if (authData.user) {
+        // Create profile if registration succeeded
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              user_id: authData.user.id,
+              username: data.username,
+              school_id: data.schoolId,
+              is_athlete: false,
+              points: 0
+            }
+          ]);
         
-        if (onSuccess) onSuccess(data.email);
-      } else {
-        // Real registration
-        const { error, email } = await registerUser(data);
-        
-        if (!error && email && onSuccess) {
-          onSuccess(email);
+        if (profileError) {
+          console.error('Error creating profile:', profileError.message);
+          toast({
+            title: 'Profile creation error',
+            description: 'Your account was created but we had trouble setting up your profile. Please contact support.',
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Account created!',
+            description: 'Your account has been successfully created. You can now sign in.',
+          });
+          
+          if (onSuccess) onSuccess(data.email);
         }
       }
     } catch (err) {

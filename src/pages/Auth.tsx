@@ -1,15 +1,14 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/auth/AuthForm';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/lib/auth';
+import { useAuthState } from '@/lib/auth/useAuthState';
 
 const Auth = () => {
   const { isMobile } = useMobile();
-  const { user } = useAuth();
+  const { user } = useAuthState();
   const navigate = useNavigate();
   
   // If user is logged in, redirect to feed

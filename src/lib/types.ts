@@ -5,6 +5,7 @@ export type User = {
   name: string;
   avatar?: string;
   school: string;
+  schoolName?: string; // Display name of the school
   badges: Badge[];
   points: number;
   isAthlete: boolean;

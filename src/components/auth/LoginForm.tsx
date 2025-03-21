@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -53,15 +53,38 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     });
     
     try {
-      toast({
-        title: 'Demo Mode',
-        description: 'Authentication is simulated in demo mode.',
+      // Real Supabase authentication
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
       });
       
-      navigate('/feed');
-      if (onSuccess) onSuccess();
+      if (error) {
+        console.error('Error signing in:', error.message);
+        toast({
+          title: 'Authentication error',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (authData.user) {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully signed in.',
+        });
+        
+        navigate('/feed');
+        if (onSuccess) onSuccess();
+      }
     } catch (err) {
       console.error('Exception during login:', err);
+      toast({
+        title: 'Sign in failed',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -123,7 +146,9 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
             )}
           />
           
-          <Button type="submit" className="w-full" disabled={loading}>
+
+          
+          <Button type="submit" variant="secondary" className="w-full text-green-500 hover:text-white" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>

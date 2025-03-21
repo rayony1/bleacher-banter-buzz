@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Image, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,17 +22,46 @@ const ImagePicker = ({
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
+  useEffect(() => {
+    // Check camera permissions on component mount
+    const checkPermissions = async () => {
+      try {
+        const { camera } = await Camera.checkPermissions();
+        if (camera !== 'granted') {
+          console.log('Camera permission not granted yet');
+        }
+      } catch (error) {
+        console.error('Error checking camera permissions:', error);
+      }
+    };
+    
+    checkPermissions();
+  }, []);
+
   const takePicture = async () => {
     if (disabled) return;
     
     try {
       setIsProcessing(true);
       
+      // Request permissions first (v7 best practice)
+      const permResult = await Camera.requestPermissions();
+      if (permResult.camera !== 'granted') {
+        toast({
+          title: "Permission Denied",
+          description: "Camera permission is required to take photos",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        return;
+      }
+      
       const image = await Camera.getPhoto({
         quality: 90,
         allowEditing: true,
         resultType: CameraResultType.Uri,
         source: CameraSource.Prompt,
+        // v7.x compliant options
         promptLabelHeader: 'Choose an option',
         promptLabelCancel: 'Cancel',
         promptLabelPhoto: 'From Photos',

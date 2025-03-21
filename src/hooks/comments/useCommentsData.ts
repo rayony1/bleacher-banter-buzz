@@ -1,22 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Comment } from './types';
 import { getPostComments } from '@/lib/supabase';
 
 export const useCommentsData = (postId: string) => {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchComments = async () => {
-    try {
-      const { data, error } = await getPostComments(postId);
-      
-      if (error) throw error;
-      
-      // Transform to Comment type 
-      return {
-        data: data?.map(comment => ({
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
+    queryKey: ['comments', postId],
+    queryFn: async () => {
+      try {
+        const { data, error } = await getPostComments(postId);
+        
+        if (error) throw new Error(error.message || 'Failed to load comments');
+        
+        // Transform to Comment type 
+        return data?.map(comment => ({
           id: comment.id || comment.comment_id,
           content: comment.content,
           post_id: comment.post_id,
@@ -30,41 +29,22 @@ export const useCommentsData = (postId: string) => {
             avatar_url: '/placeholder.svg',
             avatar: '/placeholder.svg'
           }
-        })),
-        error: null
-      };
-    } catch (err) {
-      console.error('Error fetching comments:', err);
-      return { data: null, error: err };
-    }
-  };
-
-  useEffect(() => {
-    const loadComments = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await fetchComments();
-        
-        if (error) {
-          throw new Error(error instanceof Error ? error.message : 'Failed to load comments');
-        }
-        
-        setComments(data || []);
+        })) as Comment[];
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load comments'));
-        console.error('Error loading comments:', err);
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching comments:', err);
+        throw err;
       }
-    };
-    
-    loadComments();
-  }, [postId]);
+    },
+    enabled: !!postId,
+  });
 
   return {
-    comments,
-    setComments,
-    isLoading,
-    error
+    comments: query.data || [],
+    setComments: (newComments: Comment[]) => {
+      // For compatibility with old implementation
+      queryClient.setQueryData(['comments', postId], newComments);
+    },
+    isLoading: query.isLoading,
+    error: query.error as Error | null
   };
 };

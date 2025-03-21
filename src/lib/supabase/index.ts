@@ -1,7 +1,7 @@
 
 export { supabase } from './client';
 export { getUserProfile } from './auth';
-export { getSchools } from './schools';
+export { getSchools, getSchoolById, insertSampleSchools, updateSchool } from './schools';
 export { createPost, getFeedPosts, getPostById } from './posts';
 export { likePost, unlikePost, checkIfPostLiked, getLikesCount } from './likes';
 export { getPostComments, createComment } from './comments';

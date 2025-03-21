@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getSchools } from '@/lib/supabase';
+import { getSchools, insertSampleSchools } from '@/lib/supabase';
 import { UseFormReturn } from 'react-hook-form';
 import { RegisterFormValues } from './RegisterFormTypes';
+import { schools as localSchools } from '@/data/schools';
 
 type SchoolData = {
   school_id: string;
@@ -26,6 +27,7 @@ const SchoolSelector = ({ form }: SchoolSelectorProps) => {
         setLoading(true);
         console.log('Fetching schools...');
         
+        // First try to get schools from Supabase
         const { data, error } = await getSchools();
         
         if (error) {
@@ -36,23 +38,58 @@ const SchoolSelector = ({ form }: SchoolSelectorProps) => {
             variant: 'destructive',
           });
         } else if (data && data.length > 0) {
+          // We have schools in the database
           console.log('Schools fetched successfully:', data.length);
           setSchools(data);
         } else {
-          // No schools found
-          console.warn('No schools found in the database');
-          setSchools([{
-            school_id: 'default',
-            school_name: 'Demo School'
-          }]);
+          // No schools found, try to insert the sample schools
+          console.warn('No schools found in the database, attempting to insert sample schools...');
+          
+          try {
+            // Attempt to insert sample schools
+            const { error: insertError } = await insertSampleSchools();
+            
+            if (insertError) {
+              console.error('Error inserting sample schools:', insertError);
+              // Fall back to local schools array
+              setSchools(localSchools.map(school => ({
+                school_id: school.id,
+                school_name: school.name
+              })));
+            } else {
+              // Try fetching again after insert
+              const { data: refreshedData } = await getSchools();
+              if (refreshedData && refreshedData.length > 0) {
+                setSchools(refreshedData);
+              } else {
+                // Still no data, use local fallback
+                setSchools(localSchools.map(school => ({
+                  school_id: school.id,
+                  school_name: school.name
+                })));
+              }
+            }
+          } catch (insertErr) {
+            console.error('Exception inserting schools:', insertErr);
+            // Fall back to local schools array
+            setSchools(localSchools.map(school => ({
+              school_id: school.id,
+              school_name: school.name
+            })));
+          }
         }
       } catch (err) {
         console.error('Exception fetching schools:', err);
         toast({
           title: 'Error',
-          description: 'Failed to load schools. Please try again.',
+          description: 'Failed to load schools. Using local data instead.',
           variant: 'destructive',
         });
+        // Fall back to local schools array
+        setSchools(localSchools.map(school => ({
+          school_id: school.id,
+          school_name: school.name
+        })));
       } finally {
         setLoading(false);
       }
